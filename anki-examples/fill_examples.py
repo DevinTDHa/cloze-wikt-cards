@@ -81,7 +81,9 @@ def main(csv_path, corpus_folder):
                 print(f"\n\nNo examples found for '{vi}'.")
                 continue
 
-            print_choices(vi, en, examples, total_missing_examples)
+            print_choices(
+                vi, en, examples, total_missing_examples - len(examples_to_add)
+            )
 
             while True:
                 choice = input("Your choice: ").strip().lower()
