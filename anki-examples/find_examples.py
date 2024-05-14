@@ -12,7 +12,7 @@ class CorpusExamples:
         self,
         corpus_folder,
         sentence_min_words=5,
-        sentence_word_limit=30,
+        sentence_word_limit=20,
         num_processes=6,
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
@@ -51,7 +51,7 @@ class CorpusExamples:
 
     def find_examples(self, example):
 
-        ex_pattern = re.compile(rf"\b{example}\b", re.IGNORECASE)
+        ex_pattern = re.compile(re.escape(example), re.IGNORECASE)
 
         def process_search(corpus_split):
             """Find examples in the corpus that match the pattern. The examples should be put into the result_queue, as this is called from a sub-process."""
@@ -67,7 +67,13 @@ class CorpusExamples:
                     if contains_word and under_word_limit and over_min_words:
                         start, end = ex_pattern.search(line).span()
                         found_examples.append(
-                            (file_name, line, len(line_split), start, end)
+                            {
+                                "file": file_name,
+                                "text": line,
+                                "num_words": len(line_split),
+                                "start": start,
+                                "end": end,
+                            }
                         )
 
             self.result_queue.put(found_examples)
@@ -91,7 +97,7 @@ class CorpusExamples:
         while not self.result_queue.empty():
             final_result.extend(self.result_queue.get())
 
-        final_result = sorted(final_result, key=lambda x: x[2], reverse=True)
+        final_result = sorted(final_result, key=lambda x: x["num_words"], reverse=True)
         return final_result
 
 
