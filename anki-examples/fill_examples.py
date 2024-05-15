@@ -80,17 +80,14 @@ def main(csv_path, corpus_folder):
             if not examples:
                 print(f"\n\nNo examples found for '{vi}'.")
                 continue
-
-            print_choices(
-                vi, en, examples, total_missing_examples - len(examples_to_add)
-            )
+            current_missing_examples = total_missing_examples - len(examples_to_add)
+            print_choices(vi, en, examples, current_missing_examples)
 
             while True:
                 choice = input("Your choice: ").strip().lower()
-                print("Chose:", choice)
                 if choice == "r":
                     random.shuffle(examples)
-                    print_choices(vi, en, examples, total_missing_examples)
+                    print_choices(vi, en, examples, current_missing_examples)
                 elif choice == "z" and examples_to_add:
                     last_entry = examples_to_add.pop()
                     print(f"Removed last entry: {last_entry}")
