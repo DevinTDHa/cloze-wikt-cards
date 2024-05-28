@@ -11,19 +11,32 @@ class CorpusExamples:
     def __init__(
         self,
         corpus_folder,
-        sentence_min_words=5,
-        sentence_word_limit=20,
+        min_words=4,
+        max_words=15,
         num_processes=6,
+        use_semantic_sorting=True,
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
-        self.sentence_min_words = sentence_min_words
-        self.sentence_word_limit = sentence_word_limit
+        self.min_words = min_words
+        self.max_words = max_words
         self.num_processes = num_processes
         self.split_size = len(self.corpus) // num_processes
 
         self.manager = Manager()
         self.result_queue = self.manager.Queue()
+
+        if use_semantic_sorting:
+            print("Using semantic sorting.")
+            from semantic_ranking import SimilarityRanker
+
+            self.sort = lambda vi, results: SimilarityRanker().sort(
+                vi, results, key=lambda x: x["text"]
+            )
+        else:
+            self.sort = lambda _, results: sorted(
+                results, key=lambda x: x["num_words"], reverse=True
+            )
 
     def prepare_corpus(self, corpus_folder):
         """Prepare the corpus from the given folder.
@@ -62,8 +75,8 @@ class CorpusExamples:
                     contains_word = ex_pattern.search(line)
                     # Find start and end of match
                     line_split = line.split()
-                    under_word_limit = len(line_split) < self.sentence_word_limit
-                    over_min_words = len(line_split) > self.sentence_min_words
+                    under_word_limit = len(line_split) < self.max_words
+                    over_min_words = len(line_split) > self.min_words
                     if contains_word and under_word_limit and over_min_words:
                         start, end = ex_pattern.search(line).span()
                         found_examples.append(
@@ -97,7 +110,7 @@ class CorpusExamples:
         while not self.result_queue.empty():
             final_result.extend(self.result_queue.get())
 
-        final_result = sorted(final_result, key=lambda x: x["num_words"], reverse=True)
+        final_result = self.sort(example, final_result)
         return final_result
 
 

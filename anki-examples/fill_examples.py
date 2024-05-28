@@ -14,12 +14,6 @@ BOLD = "\033[1m"
 RESET_SEQ = "\033[0m"
 
 
-def find_examples(vietnamese_word):
-    # This function should return a list of examples for the given Vietnamese word.
-    # Replace the content of this function with your actual implementation.
-    return ["Example 1", "Example 2", "Example 3", "..."]
-
-
 def print_choices(vi, en, examples, total_missing_examples):
     print(f"\n\nMissing Examples   : {total_missing_examples}")
     print(f"Vietnamese word    : {BOLD_ORANGE_START}{vi}{RESET_SEQ}")
