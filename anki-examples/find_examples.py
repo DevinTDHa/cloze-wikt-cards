@@ -14,7 +14,8 @@ class CorpusExamples:
         min_words=4,
         max_words=15,
         num_processes=6,
-        use_semantic_sorting=True,
+        use_semantic_sorting=True,  # No speedup when using multiprocessing
+        batch_size=512,
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
@@ -30,9 +31,9 @@ class CorpusExamples:
             print("Using semantic sorting.")
             from semantic_ranking import SimilarityRanker
 
-            self.sort = lambda vi, results: SimilarityRanker().sort(
-                vi, results, key=lambda x: x["text"]
-            )
+            self.sort = lambda vi, results: SimilarityRanker(
+                batch_size=batch_size
+            ).sort(vi, results, key=lambda x: x["text"])
         else:
             self.sort = lambda _, results: sorted(
                 results, key=lambda x: x["num_words"], reverse=True
@@ -116,11 +117,16 @@ class CorpusExamples:
 
 if __name__ == "__main__":
     corpus_folder = "/media/ducha/SSDSHARED/VN/subs_dump/viet_subs_processed2"
-    corpus_examples = CorpusExamples(corpus_folder)
+    corpus_examples = CorpusExamples(corpus_folder, use_semantic_sorting=False)
 
     example = "cô gái"
 
-    found_examples = corpus_examples.find_examples(example)
+    # Benchmark
+    import time
 
-    print(found_examples)
+    start = time.time()
+    found_examples = corpus_examples.find_examples(example)
+    end = time.time()
+    print(len(found_examples), "examples found for", example)
     print("Done")
+    print("Time taken:", end - start)
