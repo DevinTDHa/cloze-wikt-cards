@@ -4,6 +4,11 @@ import numpy as np
 import multiprocessing as mp
 
 from multiprocessing import Manager
+import transformers
+
+# Disable Warnings
+transformers.logging.set_verbosity_error()
+os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 
 class CorpusExamples:
@@ -65,7 +70,7 @@ class CorpusExamples:
 
     def find_examples(self, example):
 
-        ex_pattern = re.compile(re.escape(example), re.IGNORECASE)
+        ex_pattern = re.compile(rf"\b{re.escape(example)}\b", re.IGNORECASE)
 
         def process_search(corpus_split):
             """Find examples in the corpus that match the pattern. The examples should be put into the result_queue, as this is called from a sub-process."""
@@ -90,7 +95,7 @@ class CorpusExamples:
                             }
                         )
 
-            self.result_queue.put(found_examples)
+            self.result_queue.put_nowait(found_examples)
 
         # Create and start the processes
         processes = []
@@ -106,20 +111,25 @@ class CorpusExamples:
         for p in processes:
             p.join()
 
-        # Collect the results from the Queue and concatenate them into a single list
-        final_result = []
+        # Collect the results from the Queue and concatenate them into a single list and remove duplicates
+        final_result = {}
         while not self.result_queue.empty():
-            final_result.extend(self.result_queue.get())
+            for res in self.result_queue.get():
+                line = res["text"]
+                line_key = re.sub(r"\W+", "", line).lower()
+                if line_key not in final_result:
+                    final_result[line_key] = res
 
+        final_result = list(final_result.values())
         final_result = self.sort(example, final_result)
         return final_result
 
 
 if __name__ == "__main__":
     corpus_folder = "/media/ducha/SSDSHARED/VN/subs_dump/viet_subs_processed2"
-    corpus_examples = CorpusExamples(corpus_folder, use_semantic_sorting=False)
+    corpus_examples = CorpusExamples(corpus_folder, use_semantic_sorting=True)
 
-    example = "cô gái"
+    example = "từ"
 
     # Benchmark
     import time
@@ -128,5 +138,6 @@ if __name__ == "__main__":
     found_examples = corpus_examples.find_examples(example)
     end = time.time()
     print(len(found_examples), "examples found for", example)
+    print(example, ":", [e["text"] for e in found_examples[:10]])
     print("Done")
     print("Time taken:", end - start)
