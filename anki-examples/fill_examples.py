@@ -2,11 +2,11 @@ import csv
 import pickle
 import random
 import sys
-import csv
 import random
 import os
 from find_examples import CorpusExamples
 import signal
+import shutil
 
 
 BOLD_ORANGE_START = "\033[1m\033[93m"
@@ -124,6 +124,9 @@ if __name__ == "__main__":
         if not os.path.exists(csv_path):
             print(f"File '{csv_path}' does not exist.")
             sys.exit(1)
+
+        # Backup the csv file
+        shutil.copy(csv_path, csv_path + ".bak")
         filled_csv_path = csv_path.replace(".csv", "_filled.csv")
         if os.path.exists(filled_csv_path):
             print(f"File '{filled_csv_path}' already exists. Loading...")
