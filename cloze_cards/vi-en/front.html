@@ -1,0 +1,19 @@
+{{Front}}
+
+<br><br>
+
+<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span></div>
+
+<br>
+
+<script>
+    var example = document.getElementById('example');
+    var text = example.innerHTML;
+
+    // Choose a random example, which are separated by "|" in the example
+    var examples = text.split('|');
+    var randomIndex = Math.floor(Math.random() * examples.length);
+    window.vietExampleCurrentIndex = randomIndex;
+    text = examples[randomIndex];
+    example.innerHTML = text;
+</script>

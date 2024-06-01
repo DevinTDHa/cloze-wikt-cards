@@ -1,0 +1,30 @@
+{{Back}}
+
+<br><br>
+
+<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span></div>
+<br>
+
+{{type:Front}}
+
+<!-- Replace the front viet word with "___" -->
+<script>
+    var example = document.getElementById('example');
+    var text = example.innerHTML;
+
+    // Choose a random example, which are separated by "|" in the example
+    var examples = text.split('|');
+    var randomIndex = Math.floor(Math.random() * examples.length);
+    window.vietExampleCurrentIndex = randomIndex;
+    text = examples[randomIndex];
+
+    function escapeRegExp(text) {
+        return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    }
+    var esc_text = escapeRegExp('{{Front}}');
+    var esc_text_regex = new RegExp(esc_text, 'ig');
+    var newText = text.replace(esc_text_regex, '___');
+    example.innerHTML = newText;
+</script>
+
+
