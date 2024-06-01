@@ -79,6 +79,7 @@ if __name__ == "__main__":
         with tqdm(total=len(csv_cur)) as pbar:
             for entry in csv_cur:
                 if len(entry) != 3:
+                    pbar.update(1)
                     continue
                 vi, en, exs = entry
                 pbar.set_postfix(current=vi)
