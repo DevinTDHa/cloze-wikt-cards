@@ -2,7 +2,8 @@
 
 <br><br>
 
-<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span></div>
+<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span>
+</div>
 
 <br>
 
@@ -12,7 +13,8 @@
 
     // Choose a random example, which are separated by "|" in the example
     var examples = text.split('|');
-    var randomIndex = window.vietExampleCurrentIndex;
+    var randomIndex = sessionStorage.getItem("viex_curIdx");
+
     text = examples[randomIndex];
     example.innerHTML = text;
 </script>
