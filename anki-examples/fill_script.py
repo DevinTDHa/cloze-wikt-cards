@@ -9,6 +9,7 @@ import argparse
 
 
 csv_cur = []
+NA_FILLER = "None"
 
 
 def save_examples(out_path):
@@ -82,6 +83,9 @@ if __name__ == "__main__":
                     pbar.update(1)
                     continue
                 vi, en, exs = entry
+                if exs == NA_FILLER:
+                    pbar.update(1)
+                    continue
                 pbar.set_postfix(current=vi)
 
                 existing_examples = exs.split(ex_sep) if exs else []
@@ -91,7 +95,7 @@ if __name__ == "__main__":
                     continue
                 found_exs = corpus.find_examples(vi)[: num_examples - num_ex_filled]
                 if len(found_exs) == 0:
-                    entry[2] = "None" if not exs else exs
+                    entry[2] = NA_FILLER if not exs else exs
                     continue
 
                 entry[2] = ex_sep.join(
