@@ -56,5 +56,5 @@ If it already exists, this will be loaded instead at the start.
 
 The script `anki-examples/fill_script.py` enables us to fill the csv automatically. For this, it will use the corpus to find example sentences and add the first ten sentences based on _semantic_ similarity. The semantic ranking is powered by a semantic text similarity ML model.
 
-After importing the vocabulary in Anki the card will have the following format (defined in [`cloze_cards`](/cloze_cards)). The target vocabulary will be display at the top with an example sentence below. The sentence is chosen at random from the filled sentences and formatted with as a [cloze test](https://en.wikipedia.org/wiki/Cloze_test).
+After importing the vocabulary in Anki the card will have the following format (defined in [`cloze_cards`](/cloze_cards)). The target vocabulary will be display at the top with an example sentence below. The sentence is chosen at random from the filled sentences and formatted as a [cloze test](https://en.wikipedia.org/wiki/Cloze_test).
 
