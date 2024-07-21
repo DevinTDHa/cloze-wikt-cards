@@ -30,7 +30,10 @@ class SimilarityRanker:
     """
 
     def __init__(
-        self, model_name="intfloat/multilingual-e5-small", batch_size=32, device="cuda"
+        self,
+        model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+        batch_size=32,
+        device="cuda",
     ):
         self.model: SentenceTransformer = SentenceTransformer(model_name).to("cuda")
         self.batch_size = batch_size
