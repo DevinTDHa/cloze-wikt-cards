@@ -23,7 +23,7 @@ def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
     return wikt_df[wikt_df["word"] == word]
 
 
-def process_senses(senses: List[dict]) -> tuple[List[dict], str]:
+def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
     """Processes Wiktionary senses and extracts meanings and examples.
 
     Parameters
@@ -43,8 +43,10 @@ def process_senses(senses: List[dict]) -> tuple[List[dict], str]:
             continue
 
         meaning = (
-            sense["raw_glosses"][0] if "raw_glosses" in sense else sense["glosses"][0]
-        )  # Always take the first, main meaning
+            sense["raw_glosses"][0]
+            if "raw_glosses" in sense
+            else sense["glosses"][0]  # Always take the first, main meaning
+        ).replace(word, "___")  # So that when guessing, the word is not given away
 
         # Check if the meaning is already in the list
         sense_dict = next(
@@ -70,7 +72,7 @@ def process_senses(senses: List[dict]) -> tuple[List[dict], str]:
     return senses_processed, senses_str
 
 
-def json_dump_entries(entries: pd.DataFrame) -> tuple[str, str]:
+def json_dump_entries(entries: pd.DataFrame, word: str) -> tuple[str, str]:
     """Converts Wiktionary entries to a JSON string and a short string representation (for the back field.)
 
     Parameters
@@ -95,9 +97,10 @@ def json_dump_entries(entries: pd.DataFrame) -> tuple[str, str]:
         if "etymology_text" in row and row["etymology_text"]:
             cur_entry["etymology"] = row["etymology_text"]
 
-        cur_entry["meanings"], senses_string = process_senses(row["senses"])
+        cur_entry["meanings"], senses_string = process_senses(row["senses"], word=word)
         if not cur_entry["meanings"]:
             continue
+
         out_entries.append(cur_entry)
 
         entries_short_str.append(f"{row['pos']}: {senses_string}")
@@ -162,7 +165,7 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
 
             found_entries = get_entries(wikt_df, note_dict["vi"])
             if not found_entries.empty:
-                json_str, short_str = json_dump_entries(found_entries)
+                json_str, short_str = json_dump_entries(found_entries, word=note_dict["vi"])
                 note_dict["en"] = short_str
                 note_dict["wiktdata"] = json_str
             else:
