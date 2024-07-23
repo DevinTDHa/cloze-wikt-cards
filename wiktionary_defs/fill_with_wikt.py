@@ -46,7 +46,9 @@ def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
             sense["raw_glosses"][0]
             if "raw_glosses" in sense
             else sense["glosses"][0]  # Always take the first, main meaning
-        ).replace(word, "___")  # So that when guessing, the word is not given away
+        ).replace(
+            word, "___"
+        )  # So that when guessing, the word is not given away
 
         # Check if the meaning is already in the list
         sense_dict = next(
@@ -165,7 +167,9 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
 
             found_entries = get_entries(wikt_df, note_dict["vi"])
             if not found_entries.empty:
-                json_str, short_str = json_dump_entries(found_entries, word=note_dict["vi"])
+                json_str, short_str = json_dump_entries(
+                    found_entries, word=note_dict["vi"]
+                )
                 note_dict["en"] = short_str
                 note_dict["wiktdata"] = json_str
             else:
@@ -195,5 +199,4 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
 
 
 if __name__ == "__main__":
-
     fire.Fire(extract_and_fill)
