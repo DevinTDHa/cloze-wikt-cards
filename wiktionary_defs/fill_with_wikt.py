@@ -1,7 +1,9 @@
+import csv
 import json
-import pandas as pd
 from typing import List
+
 import fire
+import pandas as pd
 from tqdm import tqdm
 
 
@@ -86,8 +88,13 @@ def json_dump_entries(entries: pd.DataFrame) -> tuple[str, str]:
     for _, row in entries.iterrows():
         cur_entry = {}
         cur_entry["pos"] = row["pos"]
+
         if "synonyms" in row and row["synonyms"]:  # Synonyms can be NaN
             cur_entry["synonyms"] = [syn["word"] for syn in row["synonyms"]]
+
+        if "etymology_text" in row and row["etymology_text"]:
+            cur_entry["etymology"] = row["etymology_text"]
+
         cur_entry["meanings"], senses_string = process_senses(row["senses"])
         if not cur_entry["meanings"]:
             continue
@@ -97,19 +104,35 @@ def json_dump_entries(entries: pd.DataFrame) -> tuple[str, str]:
 
     short_meanings = " | ".join(entries_short_str)
 
-    return json.dumps(out_entries), short_meanings
+    return json.dumps(out_entries, ensure_ascii=False), short_meanings
 
 
-def fill_deck(deck: List[dict]):
-    """Fills the Anki deck with Wiktionary data.
+def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
+    deck: list[dict] = []
+    metadata: list[str] = []
 
-    Parameters
-    ----------
-    deck : List[dict]
-        The Anki deck that will be filled with Wiktionary data
-    """
-    for row in tqdm(deck):
-        pass
+    with open(deck_csv_path, "r") as csv_file:
+        # Extract the metadata comment strings at the beginning of the file
+        for line in csv_file:
+            if line.startswith("#"):
+                metadata.append(line)
+            else:
+                break
+
+        reader = csv.reader(csv_file, delimiter="\t")
+        for row in reader:
+            assert (
+                len(row) >= 4
+            ), "The deck should have four fields: id, vi, en, examples. (Make sure you export with id)"
+            row_dict = {
+                "id": row[0],
+                "vi": row[1],
+                "en": row[2],
+                "examples": row[3],
+            }
+            deck.append(row_dict)
+
+    return deck, metadata
 
 
 def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
@@ -122,14 +145,52 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
     deck_csv_path : str
         Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
     """
-    # Currently, the deck consist of three fields. Extract the deck to a list:
-    # TODO
+    # Currently, the deck consist of three fields (vi, en, examples). Extract the deck to a list:
+    print("Loading the deck and Wiktionary data...")
+    deck, metadata = load_deck(deck_csv_path)
 
+    print("Loading Wiktionary data...")
+    wikt_df = load_wiktextract(wikt_extract_path)
 
-    json_str, short_str = json_dump_entries(ex_entries)
-    with open("example.json", "w", encoding="utf-8") as f:
-        f.write(json_str)
+    not_found = []
+
+    # Process the deck
+    with tqdm(total=len(deck)) as pbar:
+        for note_dict in deck:
+            pbar.set_description(f"Processing {note_dict['vi']}")
+            pbar.update(1)
+
+            found_entries = get_entries(wikt_df, note_dict["vi"])
+            if not found_entries.empty:
+                json_str, short_str = json_dump_entries(found_entries)
+                note_dict["en"] = short_str
+                note_dict["wiktdata"] = json_str
+            else:
+                note_dict["wiktdata"] = ""
+                not_found.append(note_dict["vi"])
+
+    out_path = deck_csv_path.split("/")[-1].replace(".", "_filled.")
+    with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
+        fieldnames = ["id", "vi", "en", "examples", "wiktdata"]
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter="\t")
+
+        for metadata_line in metadata:
+            csv_file.write(metadata_line)
+
+        for note_dict in deck:
+            writer.writerow(note_dict)
+
+    print(f"Deck filled and saved to {out_path}")
+
+    if not_found:
+        print(
+            f"Definitions for {len(not_found)} words were not found. They were written to not_found.txt"
+        )
+        with open("not_found.txt", "w", encoding="utf-8") as f:
+            for word in not_found:
+                f.write(word + "\n")
 
 
 if __name__ == "__main__":
+
     fire.Fire(extract_and_fill)
