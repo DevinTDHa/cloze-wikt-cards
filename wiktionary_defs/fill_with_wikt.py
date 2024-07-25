@@ -20,7 +20,7 @@ def load_wiktextract(file_path: str) -> pd.DataFrame:
 
 
 def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
-    return wikt_df[wikt_df["word"] == word]
+    return wikt_df[wikt_df["word"].str.lower() == word.lower()]
 
 
 def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
