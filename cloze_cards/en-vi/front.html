@@ -29,6 +29,7 @@
   }
 
   function fillWiktData(wikt_data) {
+    console.log(wikt_data);
     if (!wikt_data) {
       return;
     }
@@ -83,12 +84,17 @@
 
       wiktDataParent.appendChild(wiktEntry);
     });
-    console.log(data);
 
     document.getElementById("back").innerHTML = "";
     document.getElementById("back").appendChild(wiktDataParent);
   }
 
+  // Fix problem with the text being HTML encoded sometimes
+  function decodeHtmlEntities(str) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = str;
+    return txt.value;
+  }
   chooseAndClozeExample();
-  fillWiktData("{{WiktData}}");
+  fillWiktData(decodeHtmlEntities("{{WiktData}}"));
 </script>

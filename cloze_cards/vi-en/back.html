@@ -2,9 +2,7 @@
 
 <br /><br />
 
-<div class="examplesDiv">
-  Ví dụ: <span id="examples">{{Examples}}</span>
-</div>
+<div class="examplesDiv">Ví dụ: <span id="examples">{{Examples}}</span></div>
 
 <br />
 
@@ -19,13 +17,13 @@
     var text = examplesDom.innerHTML;
     const examples = text.split("|");
     const randomIndex = sessionStorage.getItem("viex_curIdx");
-    sessionStorage.setItem("viex_curIdx", randomIndex);
 
     text = examples[randomIndex];
     examplesDom.innerHTML = text;
   }
 
   function fillWiktData(wikt_data) {
+    console.log(wikt_data);
     if (!wikt_data) {
       return;
     }
@@ -111,12 +109,18 @@
 
       wiktDataParent.appendChild(wiktEntry);
     });
-    console.log(data);
 
     document.getElementById("back").innerHTML = "";
     document.getElementById("back").appendChild(wiktDataParent);
   }
 
+  // Fix problem with the text being HTML encoded sometimes
+  function decodeHtmlEntities(str) {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = str;
+    return txt.value;
+  }
+
   chooseRandomExample();
-  fillWiktData("{{WiktData}}")
+  fillWiktData(decodeHtmlEntities("{{WiktData}}"));
 </script>
