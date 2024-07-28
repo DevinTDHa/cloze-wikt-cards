@@ -1,0 +1,72 @@
+<!-- <span id="front"></span> <br /><br /> -->
+<!---->
+<!-- <div -->
+<!--   style="font-family: &quot;Arial&quot;; font-size: 20px; font-style: italic" -->
+<!-- > -->
+<!--   Ví dụ: <span id="examples"></span> -->
+<!-- </div> -->
+<!---->
+<!-- <div class="wikt_data"> -->
+<!--   <div class="wikt_entry">???</div> -->
+<!-- </div> -->
+<!---->
+<!-- <br /> -->
+<!---->
+<!-- <style> -->
+<!--   .wikt_data { -->
+<!--     font-family: Arial, sans-serif; -->
+<!--     color: #333; -->
+<!--     background-color: #f9f9f9; -->
+<!--     padding: 5px; -->
+<!--     border-radius: 5px; -->
+<!--     border: 1px solid #ddd; -->
+<!--   } -->
+<!---->
+<!--   .wikt_entry { -->
+<!--     font-family: "Courier New", monospace; -->
+<!--     color: #666; -->
+<!--     background-color: #e8e8e8; -->
+<!--     padding: 5px; -->
+<!--     border-radius: 3px; -->
+<!--     border: 1px solid #ccc; -->
+<!--     margin-bottom: 10px; -->
+<!--   } -->
+<!-- </style> -->
+<!---->
+<!-- <script> -->
+<!--   // Function to fill spans -->
+<!--   function fillSpans(front, back) { -->
+<!--     var frontElement = document.getElementById("front"); -->
+<!--     frontElement.innerHTML = front; -->
+<!---->
+<!--     var backElement = document.getElementById("back"); -->
+<!--     backElement.innerHTML = back; -->
+<!--   } -->
+<!---->
+<!--   // Function to choose a random example -->
+<!--   function chooseRandomExample(example) { -->
+<!--     var text = example.innerHTML; -->
+<!--     var examples = text.split("|"); -->
+<!--     var randomIndex = Math.floor(Math.random() * examples.length); -->
+<!--     sessionStorage.setItem("viex_curIdx", randomIndex); -->
+<!---->
+<!--     text = examples[randomIndex]; -->
+<!--     example.innerHTML = text; -->
+<!--   } -->
+<!---->
+<!--   function fillWiktData(wikt_data) { -->
+<!--     var data = JSON.parse(wikt_data); -->
+<!--     console.log(data); -->
+<!--   } -->
+<!---->
+<!--   const front = "sau"; -->
+<!--   const back = -->
+<!--     "adj: rear, hind, back; next, subsequent | adv: later; afterwards | prep: behind; after"; -->
+<!--   const examples = -->
+<!--     'TIẾP TỤC Ở TẬP SAU|BỊ ĐÂM TỪ PHÍA SAU|[ HAI THÁNG SAU ]|SÁU THÁNG SAU - A-lô.|Cuối cúng Sau bao lâu.|...sau khi đã đấu xong.|SÁU NGÀY SAU - Chào Shuhei.|cho ủy ban, Saul ạ.|Thì đây là lúc "sau" còn gì!|đặc biệt là vế sau.'; -->
+<!--   const wikt_data = -->
+<!--     '[{"pos": "adj", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "rear, hind, back", "examples": ["hai chân sau của con chó ― two hind legs of a dog"]}, {"meaning": "next, subsequent", "examples": ["Lần sau đi cửa trước. ― Next time, use the front door."]}]}, {"pos": "adv", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "later"}, {"meaning": "afterwards"}]}, {"pos": "prep", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "behind", "examples": ["Sau nhà có vườn. ― Behind the house is a garden."]}, {"meaning": "after"}]}]'; -->
+<!---->
+<!--   fillSpans(front, back); // only for testing -->
+<!--   chooseRandomExample(example); -->
+<!-- </script> -->

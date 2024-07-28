@@ -1,29 +1,94 @@
-{{Back}}
+<span id="back">{{Back}}</span>
 
-<br><br>
+<br /><br />
 
-<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span>
-</div>
-<br>
+<div class="examplesDiv">Ví dụ: <span id="examples">{{Examples}}</span></div>
+<br />
 
 {{type:Front}}
 
-<!-- Replace the front viet word with "___" -->
 <script>
-    var example = document.getElementById('example');
+  // Replace the front viet word with "___"
+  function chooseAndClozeExample() {
+    var example = document.getElementById("examples");
     var text = example.innerHTML;
 
     // Choose a random example, which are separated by "|" in the example
-    var examples = text.split('|');
+    var examples = text.split("|");
     var randomIndex = Math.floor(Math.random() * examples.length);
     sessionStorage.setItem("viex_curIdx", randomIndex);
     text = examples[randomIndex];
 
     function escapeRegExp(text) {
-        return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+      return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     }
-    var esc_text = escapeRegExp('{{Front}}');
-    var esc_text_regex = new RegExp(esc_text, 'ig');
-    var newText = text.replace(esc_text_regex, '___');
+    var esc_text = escapeRegExp("{{Front}}");
+    var esc_text_regex = new RegExp(esc_text, "ig");
+    var newText = text.replace(esc_text_regex, "___");
     example.innerHTML = newText;
+  }
+
+  function fillWiktData(wikt_data) {
+    if (!wikt_data) {
+      return;
+    }
+    const data = JSON.parse(wikt_data);
+    const wiktDataParent = document.createElement("div");
+    wiktDataParent.classList.add("wikt_data");
+
+    function createDetails(summary, contentElement) {
+      const details = document.createElement("details");
+      const summaryElement = document.createElement("summary");
+      summaryElement.innerHTML = summary;
+      details.appendChild(summaryElement);
+
+      if (!contentElement) {
+        return details;
+      }
+
+      if (typeof contentElement === "string") {
+        const content = document.createElement("p");
+        content.innerHTML = contentElement;
+        details.appendChild(content);
+      } else {
+        details.appendChild(contentElement);
+      }
+
+      return details;
+    }
+
+    // Dynamically create the wikt entries
+    data.forEach(function (entry) {
+      const wiktEntry = document.createElement("div");
+      wiktEntry.classList.add("wikt_entry");
+
+      const pos = entry.pos + ": ";
+
+      entry.meanings.forEach(function (meaning) {
+        const meaningText = pos + meaning.meaning;
+        const hasExtraInfo = false;
+
+        let meaningElem;
+        if (!hasExtraInfo) {
+          meaningElem = document.createElement("div");
+          meaningElem.classList.add("wikt_meaning");
+          meaningElem.innerHTML = meaningText;
+        } else {
+          meaningElem = createDetails(meaningText);
+          meaningElem.classList.add("wikt_meaning");
+        }
+
+        wiktEntry.appendChild(meaningElem);
+      });
+
+      wiktDataParent.appendChild(wiktEntry);
+    });
+    console.log(data);
+
+    document.getElementById("back").innerHTML = "";
+    document.getElementById("back").appendChild(wiktDataParent);
+  }
+
+  chooseAndClozeExample();
+  fillWiktData("{{WiktData}}");
 </script>

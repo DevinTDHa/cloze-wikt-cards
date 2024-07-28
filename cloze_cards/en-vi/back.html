@@ -1,24 +1,122 @@
-{{Back}}
-<br><br>
+<span id="back">{{Back}}</span>
 
-<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span>
+<br /><br />
+
+<div class="examplesDiv">
+  Ví dụ: <span id="examples">{{Examples}}</span>
 </div>
-<br>
+<br />
 
 {{Front}}
-<hr id=answer>
-
+<hr id="answer" />
 
 {{type:Front}}
 
 <script>
-    var example = document.getElementById('example');
+  // Function to choose a random example
+  function chooseRandomExample() {
+    const examplesDom = document.getElementById("examples");
+    var text = examplesDom.innerHTML;
+    const examples = text.split("|");
+    const randomIndex = sessionStorage.getItem("viex_curIdx");
+    sessionStorage.setItem("viex_curIdx", randomIndex);
 
-    var text = example.innerHTML;
-
-    // Choose a random example, which are separated by "|" in the example
-    var examples = text.split('|');
-    var randomIndex = sessionStorage.getItem("viex_curIdx");
     text = examples[randomIndex];
-    example.innerHTML = text;
+    examplesDom.innerHTML = text;
+  }
+
+  function fillWiktData(wikt_data) {
+    if (!wikt_data) {
+      return;
+    }
+    const data = JSON.parse(wikt_data);
+    const wiktDataParent = document.createElement("div");
+    wiktDataParent.classList.add("wikt_data");
+
+    function createDetails(summary, contentElement) {
+      const details = document.createElement("details");
+      const summaryElement = document.createElement("summary");
+      summaryElement.innerHTML = summary;
+      details.appendChild(summaryElement);
+
+      if (!contentElement) {
+        return details;
+      }
+
+      if (typeof contentElement === "string") {
+        const content = document.createElement("p");
+        content.innerHTML = contentElement;
+        details.appendChild(content);
+      } else {
+        details.appendChild(contentElement);
+      }
+
+      return details;
+    }
+
+    // Dynamically create the wikt entries
+    data.forEach(function (entry) {
+      const wiktEntry = document.createElement("div");
+      wiktEntry.classList.add("wikt_entry");
+
+      const pos = entry.pos + ": ";
+
+      let synonyms;
+      if ("synonyms" in entry) {
+        const synonymsText = entry.synonyms.join(", ");
+        synonyms = createDetails("Synonyms", synonymsText);
+        synonyms.classList.add("wikt_extra");
+      }
+
+      let etymology;
+      if ("etymology" in entry) {
+        const etymologyText = entry.etymology;
+        etymology = createDetails("Etymology", etymologyText);
+        etymology.classList.add("wikt_extra");
+      }
+
+      entry.meanings.forEach(function (meaning) {
+        const meaningText = pos + meaning.meaning;
+        const hasExtraInfo = "examples" in meaning || etymology || synonyms;
+
+        let meaningElem;
+        if (!hasExtraInfo) {
+          meaningElem = document.createElement("div");
+          meaningElem.classList.add("wikt_meaning");
+          meaningElem.innerHTML = meaningText;
+        } else {
+          meaningElem = createDetails(meaningText);
+          meaningElem.classList.add("wikt_meaning");
+        }
+
+        wiktEntry.appendChild(meaningElem);
+
+        if (meaning.examples) {
+          const examplesDiv = createDetails(
+            "Examples",
+            meaning.examples.join(" | "),
+          );
+          examplesDiv.classList.add("wikt_extra");
+          meaningElem.appendChild(examplesDiv);
+        }
+
+        if (synonyms) {
+          meaningElem.appendChild(synonyms.cloneNode(true));
+        }
+
+        if (etymology) {
+          meaningElem.appendChild(etymology.cloneNode(true));
+        }
+      });
+
+      wiktDataParent.appendChild(wiktEntry);
+    });
+    console.log(data);
+
+    document.getElementById("back").innerHTML = "";
+    document.getElementById("back").appendChild(wiktDataParent);
+  }
+
+  chooseRandomExample();
+  fillWiktData("{{WiktData}}")
 </script>

@@ -1,0 +1,52 @@
+.card {
+  font-family: Arial;
+  font-size: 30px;
+  text-align: center;
+  color: black;
+  background-color: white;
+}
+
+.nightMode .card {
+  font-family: Arial;
+  font-size: 30px;
+  text-align: center;
+  color: white;
+  background-color: black;
+}
+
+
+.examplesDiv {
+  font-size: 20px;
+  font-style: italic;
+}
+
+.wikt_data {
+  border: 3px solid black;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.nightMode .wikt_data {
+  border: 3px solid white;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.wikt_meaning {
+  padding: 5px;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin: 5px;
+}
+
+.nightMode .wikt_meaning {
+  padding: 5px;
+  border: 1px solid white;
+  border-radius: 5px;
+  margin: 5px;
+}
+
+
+.wikt_extra {
+  font-size: 16px;
+}

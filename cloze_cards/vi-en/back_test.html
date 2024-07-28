@@ -1,0 +1,185 @@
+<div>
+  <span id="front">{{Front}}</span>
+
+  <br /><br />
+
+  <div
+    style="font-family: &quot;Arial&quot;; font-size: 20px; font-style: italic"
+  >
+    Ví dụ: <span id="examples">{{Examples}}</span>
+  </div>
+
+  <br />
+
+  <span id="back">{{Back}}</span>
+
+  <br />
+</div>
+
+<style>
+  body {
+    font-family: "Arial";
+    font-size: 20px;
+  }
+
+  .wikt_data {
+    background-color: #cecece;
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+  .wikt_meaning {
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 5px;
+  }
+
+  .nightMode .wikt_meaning {
+    padding: 5px;
+    border: 1px solid white;
+    border-radius: 5px;
+    margin: 5px;
+  }
+
+  .wikt_extra {
+    font-size: 16px;
+  }
+</style>
+
+<script>
+  // Function to fill spans
+  function fillSpans(front, back, examples) {
+    const frontElement = document.getElementById("front");
+    frontElement.innerHTML = front;
+
+    const backElement = document.getElementById("back");
+    backElement.innerHTML = back;
+
+    const exampleElement = document.getElementById("examples");
+    exampleElement.innerHTML = examples;
+  }
+
+  // Function to choose a random example
+  function chooseRandomExample() {
+    const examplesDom = document.getElementById("examples");
+    var text = examplesDom.innerHTML;
+    const examples = text.split("|");
+    const randomIndex = Math.floor(Math.random() * examples.length);
+    sessionStorage.setItem("viex_curIdx", randomIndex);
+
+    text = examples[randomIndex];
+    examplesDom.innerHTML = text;
+  }
+
+  function fillWiktData(wikt_data) {
+    if (!wikt_data) {
+      return;
+    }
+    const data = JSON.parse(wikt_data);
+    const wiktDataParent = document.createElement("div");
+    wiktDataParent.classList.add("wikt_data");
+
+    function createDetails(summary, contentElement) {
+      const details = document.createElement("details");
+      const summaryElement = document.createElement("summary");
+      summaryElement.innerHTML = summary;
+      details.appendChild(summaryElement);
+
+      if (!contentElement) {
+        return details;
+      }
+
+      if (typeof contentElement === "string") {
+        const content = document.createElement("p");
+        content.innerHTML = contentElement;
+        details.appendChild(content);
+      } else {
+        details.appendChild(contentElement);
+      }
+
+      return details;
+    }
+
+    // Dynamically create the wikt entries
+    data.forEach(function (entry) {
+      const wiktEntry = document.createElement("div");
+      wiktEntry.classList.add("wikt_entry");
+
+      const pos = entry.pos + ": ";
+
+      let synonyms;
+      if ("synonyms" in entry) {
+        const synonymsText = entry.synonyms.join(", ");
+        synonyms = createDetails("Synonyms", synonymsText);
+        synonyms.classList.add("wikt_extra");
+      }
+
+      let etymology;
+      if ("etymology" in entry) {
+        const etymologyText = entry.etymology;
+        etymology = createDetails("Etymology", etymologyText);
+        etymology.classList.add("wikt_extra");
+      }
+
+      entry.meanings.forEach(function (meaning) {
+        const meaningText = pos + meaning.meaning;
+        const hasExtraInfo = "examples" in meaning || etymology || synonyms;
+
+        let meaningElem;
+        if (!hasExtraInfo) {
+          meaningElem = document.createElement("div");
+          meaningElem.classList.add("wikt_meaning");
+          meaningElem.innerHTML = meaningText;
+        } else {
+          meaningElem = createDetails(meaningText);
+          meaningElem.classList.add("wikt_meaning");
+        }
+
+        wiktEntry.appendChild(meaningElem);
+
+        if (meaning.examples) {
+          const examplesDiv = createDetails(
+            "Examples",
+            meaning.examples.join(" | "),
+          );
+          examplesDiv.classList.add("wikt_extra");
+          meaningElem.appendChild(examplesDiv);
+        }
+
+        if (synonyms) {
+          meaningElem.appendChild(synonyms.cloneNode(true));
+        }
+
+        if (etymology) {
+          meaningElem.appendChild(etymology.cloneNode(true));
+        }
+      });
+
+      wiktDataParent.appendChild(wiktEntry);
+    });
+    console.log(data);
+
+    document.getElementById("back").innerHTML = "";
+    document.getElementById("back").appendChild(wiktDataParent);
+  }
+
+  const front = "sau";
+  const back =
+    "adj: rear, hind, back; next, subsequent | adv: later; afterwards | prep: behind; after";
+  const examples =
+    'TIẾP TỤC Ở TẬP SAU|BỊ ĐÂM TỪ PHÍA SAU|[ HAI THÁNG SAU ]|SÁU THÁNG SAU - A-lô.|Cuối cúng Sau bao lâu.|...sau khi đã đấu xong.|SÁU NGÀY SAU - Chào Shuhei.|cho ủy ban, Saul ạ.|Thì đây là lúc "sau" còn gì!|đặc biệt là vế sau.';
+  const wikt_data =
+    '[{"pos": "adj", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "rear, hind, back", "examples": ["hai chân sau của con chó ― two hind legs of a dog"]}, {"meaning": "next, subsequent", "examples": ["Lần sau đi cửa trước. ― Next time, use the front door."]}]}, {"pos": "adv", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "later"}, {"meaning": "afterwards"}]}, {"pos": "prep", "etymology": "From Proto-Mon-Khmer *krawʔ. Cognate with Muong khau, Mon တြဴ.\\nAttested in Phật thuyết đại báo phụ mẫu ân trọng kinh (佛說大報父母恩重經) as 牢 (MC law) (modern SV: lao) and 娄, alternative form 婁 (MC luw) (modern SV: lâu).", "meanings": [{"meaning": "behind", "examples": ["Sau nhà có vườn. ― Behind the house is a garden."]}, {"meaning": "after"}]}]';
+
+  // const front = "sâu";
+  // const back =
+  //   "adj: deep (having its bottom far down) | adv: deeply | noun: a caterpillar (larva of a butterfly) | adj: (of a tooth) with a cavity";
+  // const examples =
+  //   "độ sâu ở phía dưới.|từ sâu trong lòng đất.|Có một vực sâu giữa|Mất kiểm soát độ sâu.|Tìm độ sâu tốt nhất|Một vào sâu trong cơ bắp.|Độ sâu là bao nhiêu?|Thế còn sâu thì sao?|Là vực sâu không đáy.|Độ sâu bao nhiêu rồi?";
+  // const wikt_data =
+  //   '[{"pos": "adj", "synonyms": ["su"], "etymology": "From Proto-Vietic *c-ruː (“deep”), from Proto-Mon-Khmer *ɟruuʔ ~ *ɟruh ~ *rɟuh (“deep”). Cognate with Nghệ An/Hà Tĩnh dialects su, Muong khu, Khmer ជ្រៅ (crɨw), Bahnar jrŭ, Pacoh tru, Khmu [Cuang] ɟruʔ.", "meanings": [{"meaning": "deep (having its bottom far down)"}]}, {"pos": "adv", "synonyms": ["su"], "etymology": "From Proto-Vietic *c-ruː (“deep”), from Proto-Mon-Khmer *ɟruuʔ ~ *ɟruh ~ *rɟuh (“deep”). Cognate with Nghệ An/Hà Tĩnh dialects su, Muong khu, Khmer ជ្រៅ (crɨw), Bahnar jrŭ, Pacoh tru, Khmu [Cuang] ɟruʔ.", "meanings": [{"meaning": "deeply"}]}, {"pos": "noun", "synonyms": ["trâu"], "etymology": "Regarding the adjectival sense, compare Japanese 虫歯 (mushiba, literally “bug tooth”).", "meanings": [{"meaning": "a caterpillar (larva of a butterfly)"}]}, {"pos": "adj", "synonyms": ["trâu"], "etymology": "Regarding the adjectival sense, compare Japanese 虫歯 (mushiba, literally “bug tooth”).", "meanings": [{"meaning": "(of a tooth) with a cavity", "examples": ["răng sâu ― a tooth with a cavity", "sâu răng ― (of a person) with cavities"]}]}]';
+  fillSpans(front, back, examples); // only for testing
+  chooseRandomExample();
+  fillWiktData(wikt_data);
+</script>

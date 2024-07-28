@@ -1,21 +1,24 @@
-{{Front}}
+<span class="front">{{Front}}</span>
 
-<br><br>
+<br /><br />
 
-<div style='font-family: "Arial"; font-size: 20px;font-style: italic;'>Ví dụ: <span id="example">{{Example}}</span>
+<div
+  class="examples"
+>
+  Ví dụ: <span id="examples">{{Examples}}</span>
 </div>
 
-<br>
+<br />
 
 <script>
-    var example = document.getElementById('example');
-    var text = example.innerHTML;
+  var example = document.getElementById("example");
+  var text = example.innerHTML;
 
-    // Choose a random example, which are separated by "|" in the example
-    var examples = text.split('|');
-    var randomIndex = Math.floor(Math.random() * examples.length);
-    sessionStorage.setItem("viex_curIdx", randomIndex);
+  // Choose a random example, which are separated by "|" in the example
+  var examples = text.split("|");
+  var randomIndex = Math.floor(Math.random() * examples.length);
+  sessionStorage.setItem("viex_curIdx", randomIndex);
 
-    text = examples[randomIndex];
-    example.innerHTML = text;
-</scriptggg>
+  text = examples[randomIndex];
+  example.innerHTML = text;
+</script>
