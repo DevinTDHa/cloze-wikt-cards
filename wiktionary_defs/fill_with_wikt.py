@@ -23,7 +23,9 @@ def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
     return wikt_df[wikt_df["word"].str.lower() == word.lower()]
 
 
-def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
+def process_senses(
+    senses: List[dict], word: str, filter_words: List[str] = []
+) -> tuple[List[dict], str]:
     """Processes Wiktionary senses and extracts meanings and examples.
 
     Parameters
@@ -50,6 +52,11 @@ def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
             word, "___"
         )  # So that when guessing, the word is not given away
 
+        if filter_words and any(
+            f_word.lower() in meaning.lower() for f_word in filter_words
+        ):
+            continue
+
         # Check if the meaning is already in the list
         sense_dict = next(
             (s for s in senses_processed if s["meaning"] == meaning),
@@ -74,7 +81,9 @@ def process_senses(senses: List[dict], word: str) -> tuple[List[dict], str]:
     return senses_processed, senses_str
 
 
-def json_dump_entries(entries: pd.DataFrame, word: str) -> tuple[str, str]:
+def json_dump_entries(
+    entries: pd.DataFrame, word: str, filter_words: List[str] = []
+) -> tuple[str, str]:
     """Converts Wiktionary entries to a JSON string and a short string representation (for the back field.)
 
     Parameters
@@ -99,7 +108,9 @@ def json_dump_entries(entries: pd.DataFrame, word: str) -> tuple[str, str]:
         if "etymology_text" in row and row["etymology_text"]:
             cur_entry["etymology"] = row["etymology_text"]
 
-        cur_entry["meanings"], senses_string = process_senses(row["senses"], word=word)
+        cur_entry["meanings"], senses_string = process_senses(
+            row["senses"], word=word, filter_words=filter_words
+        )
         if not cur_entry["meanings"]:
             continue
 
@@ -109,7 +120,8 @@ def json_dump_entries(entries: pd.DataFrame, word: str) -> tuple[str, str]:
 
     short_meanings = " | ".join(entries_short_str)
 
-    return json.dumps(out_entries, ensure_ascii=False), short_meanings
+    json_string = json.dumps(out_entries, ensure_ascii=False)
+    return json_string, short_meanings
 
 
 def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
@@ -128,19 +140,23 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
         for row in reader:
             assert (
                 len(row) >= 4
-            ), "The deck should have four fields: id, vi, en, examples. (Make sure you export with id)"
+            ), "The deck should have four or five fields: id, vi, en, examples, [wiktdata]. (Make sure you export with id)"
             row_dict = {
                 "id": row[0],
                 "vi": row[1],
                 "en": row[2],
                 "examples": row[3],
             }
+            if len(row) == 5:
+                row_dict["wiktdata"] = row[4]
             deck.append(row_dict)
 
     return deck, metadata
 
 
-def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
+def extract_and_fill(
+    wikt_extract_path: str, deck_csv_path: str, filters: str = "", refill: bool = False
+):
     """Extracts and fills the Anki deck with Wiktionary data.
 
     Parameters
@@ -149,6 +165,10 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
         Path to the wiktextract JSONL file
     deck_csv_path : str
         Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
+    filters : str, optional
+        Test
+    refill : bool, optional
+        Refill the deck even if it has Wiktionary data already
     """
     # Currently, the deck consist of three fields (vi, en, examples). Extract the deck to a list:
     print("Loading the deck and Wiktionary data...")
@@ -156,6 +176,9 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
 
     print("Loading Wiktionary data...")
     wikt_df = load_wiktextract(wikt_extract_path)
+
+    filter_words = filters.split(";")
+    print("Filters:", filter_words)
 
     not_found = []
 
@@ -165,10 +188,14 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
             pbar.set_description(f"Processing {note_dict['vi']}")
             pbar.update(1)
 
+            # Skip the word if it already has Wiktionary data and we are not refilling
+            if "wiktdata" in note_dict and note_dict["wiktdata"] and not refill:
+                continue
+
             found_entries = get_entries(wikt_df, note_dict["vi"])
             if not found_entries.empty:
                 json_str, short_str = json_dump_entries(
-                    found_entries, word=note_dict["vi"]
+                    found_entries, word=note_dict["vi"], filter_words=filter_words
                 )
                 note_dict["en"] = short_str
                 note_dict["wiktdata"] = json_str
@@ -179,7 +206,13 @@ def extract_and_fill(wikt_extract_path: str, deck_csv_path: str):
     out_path = deck_csv_path.split("/")[-1].replace(".", "_filled.")
     with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
         fieldnames = ["id", "vi", "en", "examples", "wiktdata"]
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames, delimiter="\t")
+        writer = csv.DictWriter(
+            csv_file,
+            fieldnames=fieldnames,
+            delimiter="\t",
+            quoting=csv.QUOTE_NONE,
+            escapechar="\\",
+        )
 
         for metadata_line in metadata:
             csv_file.write(metadata_line)
