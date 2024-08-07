@@ -211,7 +211,8 @@ def extract_and_fill(
             fieldnames=fieldnames,
             delimiter="\t",
             quoting=csv.QUOTE_NONE,
-            escapechar="\\",
+            quotechar="",
+            escapechar="",
         )
 
         for metadata_line in metadata:
