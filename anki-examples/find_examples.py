@@ -2,12 +2,8 @@ import os
 import re
 import numpy as np
 import multiprocessing as mp
+import cudf
 
-from multiprocessing import Manager
-import transformers
-
-# Disable Warnings
-transformers.logging.set_verbosity_error()
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 
@@ -19,30 +15,22 @@ class CorpusExamples:
         min_words=4,
         max_words=15,
         num_processes=6,
-        use_semantic_sorting=True,  # No speedup when using multiprocessing
-        batch_size=512,
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
-        self.min_words = min_words
-        self.max_words = max_words
+        self.corpus_df = cudf.DataFrame(self.corpus, columns=["file", "text"]).explode(
+            "text"
+        )
+
+        self.corpus_df["num_words"] = self.corpus_df["text"].str.count(" ") + 1
+        self.corpus_df = self.corpus_df[
+            (self.corpus_df["num_words"] >= min_words)
+            & (self.corpus_df["num_words"] <= max_words)
+        ]
+        print("Filtered Examples", len(self.corpus_df))
+
         self.num_processes = num_processes
         self.split_size = len(self.corpus) // num_processes
-
-        self.manager = Manager()
-        self.result_queue = self.manager.Queue()
-
-        if use_semantic_sorting:
-            print("Using semantic sorting.")
-            from semantic_ranking import SimilarityRanker
-
-            self.sort = lambda vi, results: SimilarityRanker(
-                batch_size=batch_size
-            ).sort(vi, results, key=lambda x: x["text"])
-        else:
-            self.sort = lambda _, results: sorted(
-                results, key=lambda x: x["num_words"], reverse=True
-            )
 
     def prepare_corpus(self, corpus_folder):
         """Prepare the corpus from the given folder.
@@ -68,66 +56,19 @@ class CorpusExamples:
         print("Corpus prepared with", len(corpus), "files")
         return np.array(corpus)
 
-    def find_examples(self, example):
+    def find_examples(self, example: str, num_examples: int):
+        ex_escaped = re.escape(example)
 
-        ex_pattern = re.compile(rf"\b{re.escape(example)}\b", re.IGNORECASE)
+        # cudf doesn't support case insensitive search, so we try lower case, upper case and title case
+        ex_pattern = rf"(^|\W)({ex_escaped.lower()}|{ex_escaped.title()}|{ex_escaped.upper()})($|\W)"
 
-        def process_search(corpus_split):
-            """Find examples in the corpus that match the pattern. The examples should be put into the result_queue, as this is called from a sub-process."""
-            found_examples = []
-            for file_name, file_content in corpus_split:
-                for line in file_content:
-                    # Check case insensitive, and sentence should not go over word limit
-                    contains_word = ex_pattern.search(line)
-                    # Find start and end of match
-                    line_split = line.split()
-                    under_word_limit = len(line_split) < self.max_words
-                    over_min_words = len(line_split) > self.min_words
-                    if contains_word and under_word_limit and over_min_words:
-                        start, end = ex_pattern.search(line).span()
-                        found_examples.append(
-                            {
-                                "file": file_name,
-                                "text": line,
-                                "num_words": len(line_split),
-                                "start": start,
-                                "end": end,
-                            }
-                        )
-
-            self.result_queue.put_nowait(found_examples)
-
-        # Create and start the processes
-        processes = []
-
-        for i in range(self.num_processes):
-            split_corpus = self.corpus[i * self.split_size : (i + 1) * self.split_size]
-
-            p = mp.Process(target=process_search, args=(split_corpus,))
-            p.start()
-            processes.append(p)
-
-        # Wait for all processes to finish
-        for p in processes:
-            p.join()
-
-        # Collect the results from the Queue and concatenate them into a single list and remove duplicates
-        final_result = {}
-        while not self.result_queue.empty():
-            for res in self.result_queue.get():
-                line = res["text"]
-                line_key = re.sub(r"\W+", "", line).lower()
-                if line_key not in final_result:
-                    final_result[line_key] = res
-
-        final_result = list(final_result.values())
-        final_result = self.sort(example, final_result)
-        return final_result
+        found_examples = self.corpus_df[self.corpus_df["text"].str.contains(ex_pattern)]
+        return found_examples.sample(n=num_examples).to_dict(orient="records")
 
 
 if __name__ == "__main__":
-    corpus_folder = "/media/ducha/SSDSHARED/VN/subs_dump/viet_subs_processed2"
-    corpus_examples = CorpusExamples(corpus_folder, use_semantic_sorting=True)
+    corpus_folder = "/mnt/SSDSHARED/VN/subs_dump/viet_subs_processed2"
+    corpus_examples = CorpusExamples(corpus_folder)
 
     example = "từ"
 
@@ -135,7 +76,7 @@ if __name__ == "__main__":
     import time
 
     start = time.time()
-    found_examples = corpus_examples.find_examples(example)
+    found_examples = corpus_examples.find_examples(example, num_examples=60000)
     end = time.time()
     print(len(found_examples), "examples found for", example)
     print(example, ":", [e["text"] for e in found_examples[:10]])
