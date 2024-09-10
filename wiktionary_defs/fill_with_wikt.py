@@ -155,7 +155,7 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
 
 
 def extract_and_fill(
-    wikt_extract_path: str, deck_csv_path: str, filters: str = "", refill: bool = False
+    wikt_extract_path: str, deck_csv_path: str, filters: str = "Sino-Vietnamese Reading of", refill: bool = False
 ):
     """Extracts and fills the Anki deck with Wiktionary data.
 
@@ -200,7 +200,7 @@ def extract_and_fill(
                 note_dict["en"] = short_str
                 note_dict["wiktdata"] = json_str
             else:
-                note_dict["wiktdata"] = ""
+                note_dict["wiktdata"] = "None"
                 not_found.append(note_dict["vi"])
 
     out_path = deck_csv_path.split("/")[-1].replace(".", "_filled.")
