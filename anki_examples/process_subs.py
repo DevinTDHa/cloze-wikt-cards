@@ -54,7 +54,7 @@ def process_zip_file(zip_file, wtp):
         return None
 
     def process_line(line, seperator):
-        line_split = line.split(seperator) 
+        line_split = line.split(seperator)
         if len(line_split) < 3:
             return ""
         _, _, src = line.split(seperator)[:3]

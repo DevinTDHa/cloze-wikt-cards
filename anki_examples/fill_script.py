@@ -1,4 +1,4 @@
-import numpy as np
+from anki_utils.deck import load_deck, write_deck
 from find_examples import CorpusExamples
 from tqdm import tqdm
 import signal
@@ -8,15 +8,14 @@ import shutil
 import argparse
 
 
-csv_cur = []
+deck = []
+metadata = []
 NA_FILLER = "None"
 
 
 def save_examples(out_path):
-    if csv_cur:
-        with open(out_path, "w") as f:
-            for entry in csv_cur:
-                f.write(";".join(entry) + "\n")
+    if deck and metadata:
+        write_deck(deck, metadata, out_path)
     else:
         print("Error: No examples to save.")
 
@@ -32,7 +31,7 @@ def setup_signal_handler(out_path):
                 "Error saving progress, saving progress as `current_progress.pickle`:",
                 e,
             )
-            pickle.dump(csv_cur, open("fill_script.pickle", "wb"))
+            pickle.dump(deck, open("fill_script.pickle", "wb"))
 
             sys.exit(1)
 
@@ -40,7 +39,6 @@ def setup_signal_handler(out_path):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Fills a CSV with examples from a corpus."
     )
@@ -50,12 +48,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_examples",
         type=int,
-        default=10,
+        default=20,
         help="Number of examples to fill each line",
     )
     parser.add_argument("--ex_sep", type=str, default="|", help="Example separator")
 
-    num_examples = 10
     args = parser.parse_args()
     csv_path = args.csv
     out_path = args.out
@@ -73,35 +70,37 @@ if __name__ == "__main__":
     shutil.copy(csv_path, csv_path + ".bak")
     setup_signal_handler(out_path)
 
-    with open(csv_path, "r") as f:
-        csv_cur = [line.strip().split(";") for line in f]
+    # Load the deck
+    deck, metadata = load_deck(csv_path)
 
     try:
-        with tqdm(total=len(csv_cur)) as pbar:
-            for entry in csv_cur:
-                if len(entry) != 3:
+        with tqdm(total=len(deck)) as pbar:
+            for card in deck:
+                if card["examples"] == NA_FILLER:
                     pbar.update(1)
                     continue
-                vi, en, exs = entry
-                if exs == NA_FILLER:
-                    pbar.update(1)
-                    continue
-                pbar.set_postfix(current=vi)
+                pbar.set_postfix(current=card["vi"])
 
-                existing_examples = exs.split(ex_sep) if exs else []
+                exs = card["examples"].strip()
+                existing_examples = list(set(exs.split(ex_sep))) if exs else []
                 num_ex_filled = len(existing_examples) if exs else 0
+
+                pbar.update(1)
+
                 if num_ex_filled >= num_examples:
-                    pbar.update(1)
-                    continue
-                found_exs = corpus.find_examples(vi)[: num_examples - num_ex_filled]
-                if len(found_exs) == 0:
-                    entry[2] = NA_FILLER if not exs else exs
                     continue
 
-                entry[2] = ex_sep.join(
+                found_exs = corpus.find_examples(
+                    card["vi"], num_examples=num_examples - num_ex_filled
+                )
+                if len(found_exs) == 0 and num_ex_filled == 0:
+                    card["examples"] = NA_FILLER
+                    continue
+
+                card["examples"] = ex_sep.join(
                     existing_examples + [e["text"] for e in found_exs]
                 )
-                pbar.update(1)
+
     except Exception as e:
         print("Error:", e)
         save_examples(out_path)

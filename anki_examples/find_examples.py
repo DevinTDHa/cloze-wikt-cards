@@ -1,14 +1,12 @@
 import os
 import re
 import numpy as np
-import multiprocessing as mp
 import cudf
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 
 class CorpusExamples:
-
     def __init__(
         self,
         corpus_folder,
@@ -18,9 +16,9 @@ class CorpusExamples:
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
-        self.corpus_df = cudf.DataFrame(self.corpus, columns=["file", "text"]).explode(
-            "text"
-        )
+        self.corpus_df: cudf.DataFrame = cudf.DataFrame(
+            self.corpus, columns=["file", "text"]
+        ).explode("text")
 
         self.corpus_df["num_words"] = self.corpus_df["text"].str.count(" ") + 1
         self.corpus_df = self.corpus_df[
@@ -57,13 +55,24 @@ class CorpusExamples:
         return np.array(corpus)
 
     def find_examples(self, example: str, num_examples: int):
+        if not example or not num_examples:
+            return []
+
         ex_escaped = re.escape(example)
 
         # cudf doesn't support case insensitive search, so we try lower case, upper case and title case
         ex_pattern = rf"(^|\W)({ex_escaped.lower()}|{ex_escaped.title()}|{ex_escaped.upper()})($|\W)"
 
-        found_examples = self.corpus_df[self.corpus_df["text"].str.contains(ex_pattern)]
-        return found_examples.sample(n=num_examples).to_dict(orient="records")
+        found_examples: cudf.DataFrame = self.corpus_df[
+            self.corpus_df["text"].str.contains(ex_pattern)
+        ]
+
+        if len(found_examples) == 0:
+            return []
+        elif len(found_examples) <= num_examples:
+            return found_examples.to_dict(orient="records")
+        else:
+            return found_examples.sample(n=num_examples).to_dict(orient="records")
 
 
 if __name__ == "__main__":

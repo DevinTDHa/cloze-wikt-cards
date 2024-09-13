@@ -1,10 +1,11 @@
-import csv
 import json
+import re
 from typing import List
 
 import fire
 import pandas as pd
 from tqdm import tqdm
+from anki_utils.deck import load_deck, write_deck
 
 
 def load_wiktextract(file_path: str) -> pd.DataFrame:
@@ -48,8 +49,9 @@ def process_senses(
             sense["raw_glosses"][0]
             if "raw_glosses" in sense
             else sense["glosses"][0]  # Always take the first, main meaning
-        ).replace(
-            word, "___"
+        )
+        meaning = re.sub(
+            word, "___", meaning, flags=re.IGNORECASE
         )  # So that when guessing, the word is not given away
 
         if filter_words and any(
@@ -124,38 +126,11 @@ def json_dump_entries(
     return json_string, short_meanings
 
 
-def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
-    deck: list[dict] = []
-    metadata: list[str] = []
-
-    with open(deck_csv_path, "r") as csv_file:
-        # Extract the metadata comment strings at the beginning of the file
-        for line in csv_file:
-            if line.startswith("#"):
-                metadata.append(line)
-            else:
-                break
-
-        reader = csv.reader(csv_file, delimiter="\t")
-        for row in reader:
-            assert (
-                len(row) >= 4
-            ), "The deck should have four or five fields: id, vi, en, examples, [wiktdata]. (Make sure you export with id)"
-            row_dict = {
-                "id": row[0],
-                "vi": row[1],
-                "en": row[2],
-                "examples": row[3],
-            }
-            if len(row) == 5:
-                row_dict["wiktdata"] = row[4]
-            deck.append(row_dict)
-
-    return deck, metadata
-
-
 def extract_and_fill(
-    wikt_extract_path: str, deck_csv_path: str, filters: str = "Sino-Vietnamese Reading of", refill: bool = False
+    wikt_extract_path: str,
+    deck_csv_path: str,
+    filters: str = "Sino-Vietnamese Reading of",
+    refill: bool = False,
 ):
     """Extracts and fills the Anki deck with Wiktionary data.
 
@@ -204,24 +179,8 @@ def extract_and_fill(
                 not_found.append(note_dict["vi"])
 
     out_path = deck_csv_path.split("/")[-1].replace(".", "_filled.")
-    with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
-        fieldnames = ["id", "vi", "en", "examples", "wiktdata"]
-        writer = csv.DictWriter(
-            csv_file,
-            fieldnames=fieldnames,
-            delimiter="\t",
-            quoting=csv.QUOTE_NONE,
-            quotechar="",
-            escapechar="",
-        )
-
-        for metadata_line in metadata:
-            csv_file.write(metadata_line)
-
-        for note_dict in deck:
-            writer.writerow(note_dict)
-
-    print(f"Deck filled and saved to {out_path}")
+    print("Writing the deck...")
+    write_deck(deck, metadata, out_path)
 
     if not_found:
         print(
