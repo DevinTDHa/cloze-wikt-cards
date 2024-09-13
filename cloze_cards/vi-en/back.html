@@ -11,6 +11,27 @@
 <br />
 
 <script>
+  function createDetails(summary, contentElement) {
+    const details = document.createElement("details");
+    const summaryElement = document.createElement("summary");
+    summaryElement.innerHTML = summary;
+    details.appendChild(summaryElement);
+
+    if (!contentElement) {
+      return details;
+    }
+
+    if (typeof contentElement === "string") {
+      const content = document.createElement("p");
+      content.innerHTML = contentElement;
+      details.appendChild(content);
+    } else {
+      details.appendChild(contentElement);
+    }
+
+    return details;
+  }
+
   // Function to choose a random example
   function chooseRandomExample() {
     const examplesDom = document.getElementById("examples");
@@ -18,7 +39,11 @@
     const examples = text.split("|");
     const randomIndex = sessionStorage.getItem("viex_curIdx");
 
-    text = examples[randomIndex];
+    const exDetails = createDetails(
+      examples[randomIndex],
+      examples.join("<br>"),
+    );
+    text = exDetails.outerHTML;
     examplesDom.innerHTML = text;
   }
 
@@ -30,27 +55,6 @@
     const data = JSON.parse(wikt_data);
     const wiktDataParent = document.createElement("div");
     wiktDataParent.classList.add("wikt_data");
-
-    function createDetails(summary, contentElement) {
-      const details = document.createElement("details");
-      const summaryElement = document.createElement("summary");
-      summaryElement.innerHTML = summary;
-      details.appendChild(summaryElement);
-
-      if (!contentElement) {
-        return details;
-      }
-
-      if (typeof contentElement === "string") {
-        const content = document.createElement("p");
-        content.innerHTML = contentElement;
-        details.appendChild(content);
-      } else {
-        details.appendChild(contentElement);
-      }
-
-      return details;
-    }
 
     // Dynamically create the wikt entries
     data.forEach(function (entry) {
