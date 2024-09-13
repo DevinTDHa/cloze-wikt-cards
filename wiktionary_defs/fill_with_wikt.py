@@ -1,8 +1,9 @@
+import argparse
 import json
 import re
+import shutil
 from typing import List
 
-import fire
 import pandas as pd
 from tqdm import tqdm
 from anki_utils.deck import load_deck, write_deck
@@ -127,7 +128,7 @@ def json_dump_entries(
 
 
 def extract_and_fill(
-    wikt_extract_path: str,
+    wikt_extract: str,
     deck_csv_path: str,
     filters: str = "Sino-Vietnamese Reading of",
     refill: bool = False,
@@ -136,7 +137,7 @@ def extract_and_fill(
 
     Parameters
     ----------
-    wikt_extract_path : str
+    wikt_extract : str
         Path to the wiktextract JSONL file
     deck_csv_path : str
         Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
@@ -150,7 +151,7 @@ def extract_and_fill(
     deck, metadata = load_deck(deck_csv_path)
 
     print("Loading Wiktionary data...")
-    wikt_df = load_wiktextract(wikt_extract_path)
+    wikt_df = load_wiktextract(wikt_extract)
 
     filter_words = filters.split(";")
     print("Filters:", filter_words)
@@ -178,7 +179,7 @@ def extract_and_fill(
                 note_dict["wiktdata"] = "None"
                 not_found.append(note_dict["vi"])
 
-    out_path = deck_csv_path.split("/")[-1].replace(".", "_filled.")
+    out_path = deck_csv_path.split("/")[-1].replace(".", "_wikt.")
     print("Writing the deck...")
     write_deck(deck, metadata, out_path)
 
@@ -192,4 +193,32 @@ def extract_and_fill(
 
 
 if __name__ == "__main__":
-    fire.Fire(extract_and_fill)
+    parser = argparse.ArgumentParser(
+        description="Extracts and fills the Anki deck with Wiktionary data."
+    )
+    parser.add_argument(
+        "--wikt_extract", type=str, help="Path to the wiktextract JSONL file"
+    )
+    parser.add_argument(
+        "--deck",
+        type=str,
+        help="Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.",
+    )
+    parser.add_argument(
+        "--filters",
+        type=str,
+        default="Sino-Vietnamese Reading of",
+        help="Semicolon (;) separated list of filters",
+    )
+    parser.add_argument(
+        "--refill",
+        action="store_true",
+        help="Refill the deck even if it has Wiktionary data already",
+    )
+
+    args = parser.parse_args()
+
+    # Backup the original deck first
+    shutil.copy(args.deck, args.deck + ".bak")
+
+    extract_and_fill(args.wikt_extract, args.deck, args.filters, args.refill)

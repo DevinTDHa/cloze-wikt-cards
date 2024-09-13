@@ -1,9 +1,11 @@
 import os
 import re
 import numpy as np
-import cudf
+import cudf.pandas
 
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
+cudf.pandas.install()  # Enable automatic conversion to cudf.DataFrame and memory sharing
+
+import pandas as pd  # noqa: E402
 
 
 class CorpusExamples:
@@ -16,7 +18,7 @@ class CorpusExamples:
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
-        self.corpus_df: cudf.DataFrame = cudf.DataFrame(
+        self.corpus_df: pd.DataFrame = pd.DataFrame(
             self.corpus, columns=["file", "text"]
         ).explode("text")
 
@@ -63,7 +65,7 @@ class CorpusExamples:
         # cudf doesn't support case insensitive search, so we try lower case, upper case and title case
         ex_pattern = rf"(^|\W)({ex_escaped.lower()}|{ex_escaped.title()}|{ex_escaped.upper()})($|\W)"
 
-        found_examples: cudf.DataFrame = self.corpus_df[
+        found_examples: pd.DataFrame = self.corpus_df[
             self.corpus_df["text"].str.contains(ex_pattern)
         ]
 
@@ -79,7 +81,7 @@ if __name__ == "__main__":
     corpus_folder = "/mnt/SSDSHARED/VN/subs_dump/viet_subs_processed2"
     corpus_examples = CorpusExamples(corpus_folder)
 
-    example = "từ"
+    example = "hội đồng quản trị"
 
     # Benchmark
     import time

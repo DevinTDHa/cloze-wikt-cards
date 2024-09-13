@@ -1,135 +1,111 @@
-import csv
-import pickle
-import random
-import sys
-import random
-import os
+from anki_utils.deck import load_deck, write_deck
 from find_examples import CorpusExamples
+from tqdm import tqdm
 import signal
+import sys
+import pickle
 import shutil
+import argparse
 
 
-BOLD_ORANGE_START = "\033[1m\033[93m"
-BOLD = "\033[1m"
-RESET_SEQ = "\033[0m"
+deck = []
+metadata = []
+NA_FILLER = "None"
 
 
-def print_choices(vi, en, examples, total_missing_examples):
-    print(f"\n\nMissing Examples   : {total_missing_examples}")
-    print(f"Vietnamese word    : {BOLD_ORANGE_START}{vi}{RESET_SEQ}")
-    print(f"English translation: {BOLD}{en}{RESET_SEQ}\n")
-    print(
-        f"Found {len(examples)} total examples, showing the first 10.\n"
-        "Choose an example to add (0-9) or press 'r' to shuffle and refresh the list, 'z' to undo or 's' to skip:"
-    )
-    EXAMPLES_LIMIT = 10
-
-    for i, example in enumerate(examples[:EXAMPLES_LIMIT]):
-        file = example["file"][:33]
-        text = example["text"]
-        # num_words = example["num_words"]
-        start = example["start"]
-        end = example["end"]
-
-        markup_text = (
-            text[:start] + BOLD_ORANGE_START + text[start:end] + RESET_SEQ + text[end:]
-        )
-        print(f"{i}. {file:33s}... : {markup_text}")
+def save_examples(out_path):
+    if deck and metadata:
+        write_deck(deck, metadata, out_path)
+    else:
+        print("Error: No examples to save.")
 
 
-def main(csv_path, corpus_folder):
-    corpus_examples = CorpusExamples(corpus_folder)
-
-    VIE_COLUMN_INDEX = 0
-    ENG_COLUMN_INDEX = 1
-    EXAMPLE_COLUMN_INDEX = 2
-
-    with open(csv_path, mode="r", encoding="utf-8") as file:
-        csv_reader = csv.reader(file, delimiter=";")
-        rows = list(csv_reader)
-
+def setup_signal_handler(out_path):
     def signal_handler(signal, frame):
         print("\n\nInterrupted. Saving progress...")
         try:
-            save_examples(csv_path, rows)
+            save_examples(out_path)
             sys.exit(0)
         except Exception as e:
             print(
                 "Error saving progress, saving progress as `current_progress.pickle`:",
                 e,
             )
-            pickle.dump(rows, open("current_progress.pickle", "wb"))
+            pickle.dump(deck, open("fill_script.pickle", "wb"))
+
             sys.exit(1)
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    total_missing_examples = sum(not row[EXAMPLE_COLUMN_INDEX] for row in rows)
-    examples_to_add = []
-    for row in rows:
-        if not row[EXAMPLE_COLUMN_INDEX]:
-            vi = row[VIE_COLUMN_INDEX]
-            en = row[ENG_COLUMN_INDEX]
-            examples = corpus_examples.find_examples(vi)
-
-            if not examples:
-                print(f"\n\nNo examples found for '{vi}'.")
-                continue
-            current_missing_examples = total_missing_examples - len(examples_to_add)
-            print_choices(vi, en, examples, current_missing_examples)
-
-            while True:
-                choice = input("Your choice: ").strip().lower()
-                if choice == "r":
-                    random.shuffle(examples)
-                    print_choices(vi, en, examples, current_missing_examples)
-                elif choice == "z" and examples_to_add:
-                    last_entry = examples_to_add.pop()
-                    print(f"Removed last entry: {last_entry}")
-                    break
-                elif choice.isdigit() and 0 <= int(choice) <= 9:
-                    selected_example = examples[int(choice)]
-                    examples_to_add.append((row[VIE_COLUMN_INDEX], selected_example))
-                    row[EXAMPLE_COLUMN_INDEX] = selected_example
-                    break
-                elif choice == "s":
-                    break
-                else:
-                    print("Invalid input. Please try again.")
-
-    save_examples(csv_path, rows)
-
-
-def save_examples(csv_path, rows):
-    if not csv_path.endswith("_filled.csv"):
-        result_path = csv_path.replace(".csv", "_filled.csv")
-    else:
-        result_path = csv_path
-    with open(result_path, mode="w", encoding="utf-8", newline="") as file:
-        csv_writer = csv.writer(file, delimiter=";")
-        csv_writer.writerows(rows)
-    print(f"\nCSV file updated with examples. Saved as '{result_path}'.")
-
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage: python fill_examples.py <corpus_folder> <csv_path>")
-    else:
-        corpus_folder = sys.argv[1]
-        csv_path = sys.argv[2]
+    parser = argparse.ArgumentParser(
+        description="Fills a CSV with examples from a corpus."
+    )
+    parser.add_argument("--corpus", type=str, help="Path to the corpus folder")
+    parser.add_argument("--deck", type=str, help="Path to the input CSV deck")
+    parser.add_argument("--out", type=str, help="Path to the output CSV file")
+    parser.add_argument(
+        "--num_examples",
+        type=int,
+        default=20,
+        help="Number of examples to fill each line",
+    )
+    parser.add_argument("--ex_sep", type=str, default="|", help="Example separator")
 
-        # Check if the folder and file exists
-        if not os.path.exists(corpus_folder):
-            print(f"Folder '{corpus_folder}' does not exist.")
-            sys.exit(1)
-        if not os.path.exists(csv_path):
-            print(f"File '{csv_path}' does not exist.")
-            sys.exit(1)
+    args = parser.parse_args()
+    csv_path = args.deck
+    out_path = args.out
+    num_examples = args.num_examples
+    ex_sep = args.ex_sep
 
-        # Backup the csv file
-        shutil.copy(csv_path, csv_path + ".bak")
-        filled_csv_path = csv_path.replace(".csv", "_filled.csv")
-        if os.path.exists(filled_csv_path):
-            print(f"File '{filled_csv_path}' already exists. Loading...")
-            csv_path = filled_csv_path
+    # Check all arguments filled
+    if not all([csv_path, out_path, args.corpus]):
+        print("Error: Missing arguments")
+        sys.exit(1)
 
-        main(csv_path, corpus_folder)
+    corpus = CorpusExamples(args.corpus)
+
+    # backup the original file first
+    shutil.copy(csv_path, csv_path + ".bak")
+    setup_signal_handler(out_path)
+
+    # Load the deck
+    deck, metadata = load_deck(csv_path)
+
+    try:
+        with tqdm(total=len(deck)) as pbar:
+            for card in deck:
+                if card["examples"] == NA_FILLER:
+                    pbar.update(1)
+                    continue
+                pbar.set_postfix(current=card["vi"])
+
+                exs = card["examples"].strip()
+                existing_examples = list(set(exs.split(ex_sep))) if exs else []
+                num_ex_filled = len(existing_examples) if exs else 0
+
+                pbar.update(1)
+
+                if num_ex_filled >= num_examples:
+                    continue
+
+                found_exs = corpus.find_examples(
+                    card["vi"], num_examples=num_examples - num_ex_filled
+                )
+                if len(found_exs) == 0 and num_ex_filled == 0:
+                    card["examples"] = NA_FILLER
+                    continue
+
+                card["examples"] = ex_sep.join(
+                    existing_examples + [e["text"] for e in found_exs]
+                )
+
+    except Exception as e:
+        print("Error:", e)
+        save_examples(out_path)
+        sys.exit(1)
+
+    # Save the results
+    save_examples(out_path)
+    print("Done!")
