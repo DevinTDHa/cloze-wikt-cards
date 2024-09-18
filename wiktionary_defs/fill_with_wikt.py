@@ -11,13 +11,7 @@ from anki_utils.deck import load_deck, write_deck
 
 def load_wiktextract(file_path: str) -> pd.DataFrame:
     """Loads JSONL file with wiktextract data (See: https://github.com/tatuylonen/wiktextract)"""
-
-    with open(file_path) as f:
-        lines = f.read().splitlines()
-
-    line_dicts: List[dict] = [json.loads(line) for line in lines]
-    df: pd.DataFrame = pd.DataFrame(line_dicts)
-
+    df: pd.DataFrame = pd.read_json(file_path, lines=True)
     return df.fillna("")
 
 
