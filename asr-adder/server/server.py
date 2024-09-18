@@ -46,7 +46,6 @@ class TranscriptionProcessor:
                 if word in result_dict:
                     continue
 
-                print("looking up", word)
                 result = self.get_wikt_entry(word)
                 result_dict[word] = result
 
@@ -66,7 +65,11 @@ if __name__ == "__main__":
 
     @app.route("/process_audio", methods=["POST"])
     def process_audio():
-        audio_file = request.form["audio"]
+        if "audio" not in request.files:
+            return "No audio file found", 400
+
+        audio_file = request.files["audio"].read()
+
         if "max_n_gram" in request.form:
             max_n_gram = int(request.form["max_n_gram"])
         else:
