@@ -6,7 +6,7 @@ from wiktionary_defs.fill_with_wikt import (
     get_entries,
     load_wiktextract,
 )
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 
 
 class TranscriptionProcessor:
@@ -33,11 +33,14 @@ class TranscriptionProcessor:
             "short": short_str,
         }
 
-    def process_audio(self, audio_bytes: bytes, max_n_gram: int = 4) -> dict:
+    def process_audio(
+        self, audio_bytes: bytes, max_n_gram: int = 4
+    ) -> tuple[str, dict]:
         # Assume the audio is in a correct format for ffmpeg to read
-        # and has the correct sampling rate
-        transcribed_audio: str = self.transcriber(audio_bytes)["text"]
-        word_splits = re.sub(r"(^\W|\W$)", "", transcribed_audio).split()
+        # and has the correct sampling rate TODO: Convert this first? see if ffmpeg
+        # can handle it.
+        transcription: str = self.transcriber(audio_bytes)["text"]
+        word_splits = re.sub(r"(^\W|\W$)", "", transcription).split()
 
         result_dict = {}
         for n in range(1, max_n_gram + 1):
@@ -49,7 +52,7 @@ class TranscriptionProcessor:
                 result = self.get_wikt_entry(word)
                 result_dict[word] = result
 
-        return {k: v for k, v in result_dict.items() if v["json"]}
+        return transcription, {k: v for k, v in result_dict.items() if v["json"]}
 
 
 if __name__ == "__main__":
@@ -58,10 +61,6 @@ if __name__ == "__main__":
         wikt_path="/mnt/SSDSHARED/VN/wikt/kaikki.org-dictionary-Vietnamese.jsonl",
         model_name="vinai/PhoWhisper-medium",
     )
-
-    @app.route("/")
-    def hello():
-        return "Server is running."
 
     @app.route("/process_audio", methods=["POST"])
     def process_audio():
@@ -75,7 +74,17 @@ if __name__ == "__main__":
         else:
             max_n_gram = 4
 
-        result = processor.process_audio(audio_file, max_n_gram)
-        return result
+        transcription, result = processor.process_audio(audio_file, max_n_gram)
+        print("Finished processing audio")
+        print(transcription, result)
 
-    app.run(debug=True)
+        return {"transcription": transcription, "result": result}
+
+    @app.route("/")
+    def serve_gui():
+        return send_from_directory(
+            "/home/ducha/Workspace/python/cloze-wikt-cards/asr-adder/client-gui",
+            "gui.html",
+        )
+
+    app.run(debug=False)
