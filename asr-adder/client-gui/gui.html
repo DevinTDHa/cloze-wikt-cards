@@ -64,13 +64,13 @@
     <!-- Results Table wrapped in a proper row div -->
     <div class="row">
       <div class="col-12">
-        <div class="table-wrapper", style="max-width: 700; max-height: none;">
+        <div class="table-wrapper" , style="max-width: 700; max-height: none;">
           <table class="table table-striped">
             <thead>
               <tr>
-                <th>Word</th>
-                <th>Definition</th>
-                <th>Action</th>
+                <th class="col-3">Word</th>
+                <th class="col-8">Definition</th>
+                <th class="col-1"></th>
               </tr>
             </thead>
             <tbody id="resultsTable">
@@ -82,11 +82,18 @@
     </div>
 
     <!-- Clear and Save As Buttons -->
-    <div class="mt-3">
-      <button class="btn btn-primary" id="saveBtn">Save as</button>
-      <input type="text" id="saveFileName" class="form-control" placeholder="results.csv"
-        onclick="autofillPlaceholder(this)" style="display: inline-block; width: auto;">
-      <button class="btn btn-primary float-end" id="clearBtn">Clear All Entries</button>
+    <div class="row mt-3">
+      <div class="col-md-8">
+        <div class="input-group">
+          <button class="btn btn-primary" id="saveBtn">Save as</button>
+          <input type="text" id="saveFileName" class="form-control" placeholder="results.csv"
+            onclick="autofillPlaceholder(this)">
+        </div>
+      </div>
+      <div class="col-md-4 text-end">
+        <button class="btn btn-primary" id="clearBtn" onmouseover="this.style.backgroundColor='red'"
+          onmouseout="this.style.backgroundColor=''">Clear Entries</button>
+      </div>
     </div>
   </div>
 
@@ -182,7 +189,7 @@
             const actionCell = document.createElement('td');
             const deleteBtn = document.createElement('button');
             deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
-            deleteBtn.textContent = 'Delete';
+            deleteBtn.innerHTML = '🗑';
             deleteBtn.addEventListener('click', () => row.remove());
             actionCell.appendChild(deleteBtn);
             row.appendChild(actionCell);

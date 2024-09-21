@@ -79,7 +79,9 @@ def process_senses(
 
 
 def json_dump_entries(
-    entries: pd.DataFrame, word: str, filter_words: List[str] = []
+    entries: pd.DataFrame,
+    word: str,
+    filter_words: List[str] = ["Sino-Vietnamese Reading of"],
 ) -> tuple[str, str]:
     """Converts Wiktionary entries to a JSON string and a short string representation (for the back field.)
 
