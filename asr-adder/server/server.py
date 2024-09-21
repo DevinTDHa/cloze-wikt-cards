@@ -7,6 +7,7 @@ from wiktionary_defs.fill_with_wikt import (
     load_wiktextract,
 )
 from flask import Flask, request, send_from_directory
+import os
 
 
 class TranscriptionProcessor:
@@ -75,15 +76,13 @@ if __name__ == "__main__":
             max_n_gram = 4
 
         transcription, result = processor.process_audio(audio_file, max_n_gram)
-        print("Finished processing audio")
-        print(transcription, result)
-
+        print(f"Finished processing audio: {transcription}")
         return {"transcription": transcription, "result": result}
 
     @app.route("/")
     def serve_gui():
         return send_from_directory(
-            "/home/ducha/Workspace/python/cloze-wikt-cards/asr-adder/client-gui",
+            os.path.join(os.getcwd(), "client-gui"),
             "gui.html",
         )
 
