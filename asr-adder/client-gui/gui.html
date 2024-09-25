@@ -83,14 +83,20 @@
 
     <!-- Clear and Save As Buttons -->
     <div class="row m-3">
-      <div class="col-md-8">
+      <div class="col-md-6">
         <div class="input-group">
           <button class="btn btn-primary" id="saveBtn">Save as</button>
-          <input type="text" id="saveFileName" class="form-control" placeholder="results.csv"
+          <input type="text" id="saveFileName" class="form-control" placeholder="results.txt"
             onclick="autofillPlaceholder(this)">
+          <small class="form-text text-muted">Only the word itself is saved. Use the other scripts to fill the
+            rest.</small>
         </div>
       </div>
-      <div class="col-md-4 text-end">
+      <div class="col-md-3 text-end">
+        <button class="btn btn-primary" id="clearDuplicates" onmouseover="this.style.backgroundColor='red'"
+          onmouseout="this.style.backgroundColor=''">Clear ✅</button>
+      </div>
+      <div class="col-md-3 text-end">
         <button class="btn btn-primary" id="clearBtn" onmouseover="this.style.backgroundColor='red'"
           onmouseout="this.style.backgroundColor=''">Clear Entries</button>
       </div>
@@ -174,14 +180,22 @@
           document.getElementById('outputText').value = outputText;
 
           const resultsTable = document.getElementById('resultsTable');
+          const existsInDeck = data.existing_words;
 
           Object.entries(data.result).forEach(([word, definition]) => {
             const existingWords = Array.from(document.querySelectorAll('#resultsTable td:first-child')).map(td => td.textContent);
             if (!existingWords.includes(word)) {
-              const row = document.createElement('tr');
+              let row = document.createElement('tr');
 
               const wordCell = document.createElement('td');
               wordCell.textContent = word;
+
+              // Highlight duplicates
+              if (existsInDeck.includes(word)) {
+                row.classList.add('duplicateEntry');
+                wordCell.textContent = word + ' ✅';
+              }
+
               row.appendChild(wordCell);
 
               const definitionCell = document.createElement('td');
@@ -220,6 +234,12 @@
         });
     }
 
+    // Clear the duplicates, tr that has the class duplicateEntry
+    document.getElementById('clearDuplicates').addEventListener('click', function () {
+      const duplicateEntries = document.querySelectorAll('.duplicateEntry');
+      duplicateEntries.forEach(entry => entry.remove());
+    });
+
     // Clear the results table
     document.getElementById('clearBtn').addEventListener('click', function () {
       document.getElementById('resultsTable').innerHTML = '';
@@ -235,9 +255,12 @@
 
       // TODO: Proper formatting of output here
       for (const row of resultsTable.rows) {
+        if (row.classList.contains('duplicateEntry')) {
+          continue;
+        }
         const word = row.cells[0].textContent;
-        const definition = row.cells[1].textContent;
-        fileContent += `${word}\t${definition}\n`;
+        // const definition = row.cells[1].textContent;
+        fileContent += `${word}\n`;
       }
 
       const blob = new Blob([fileContent], { type: 'text/plain' });
@@ -250,12 +273,19 @@
     // Test button placeholder
     document.getElementById('testBtn').addEventListener('click', function () {
       let url = document.getElementById('url').value || document.getElementById('url').placeholder;
-      const baseUrl = new URL(url).origin; // Extract the base URL
+      const baseUrl = new URL(url).origin + "/deck"; // Get deck URL
 
       fetch(baseUrl)
         .then(response => {
           if (response.status === 200) {
+            this.disabled = true;
             this.style.backgroundColor = 'green';
+            response.json().then(data => {
+              if (data.deck > 0) {
+                this.innerHTML = `✅ Deck Size: ${data.deck}`;
+              }
+            });
+
           } else {
             this.style.backgroundColor = 'red';
           }
