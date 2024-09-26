@@ -16,14 +16,22 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
         reader = csv.reader(csv_file, delimiter="\t")
         for row in reader:
             assert (
-                len(row) >= 4
-            ), "The deck should have four or five fields: id, vi, en, examples, [wiktdata]. (Make sure you export with id)"
-            row_dict = {
-                "id": row[0],
-                "vi": row[1],
-                "en": row[2],
-                "examples": row[3],
-            }
+                len(row) == 1 or len(row) >= 4
+            ), "The deck should have one (vi), four or five fields: id, vi, en, examples, [wiktdata]. (Make sure you export with id)"
+            if len(row) == 1:
+                row_dict = {
+                    "id": "",
+                    "vi": row[0],
+                    "en": "",
+                    "examples": "",
+                }
+            else:
+                row_dict = {
+                    "id": row[0],
+                    "vi": row[1],
+                    "en": row[2],
+                    "examples": row[3],
+                }
             if len(row) == 5:
                 row_dict["wiktdata"] = row[4]
             deck.append(row_dict)
@@ -49,4 +57,4 @@ def write_deck(deck: list[dict], metadata: list[str], out_path: str):
         for note_dict in deck:
             writer.writerow(note_dict)
 
-    print(f"Deck filled and saved to {out_path}")
+    print(f"Writing deck to {out_path}")

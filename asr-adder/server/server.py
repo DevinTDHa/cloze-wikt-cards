@@ -115,6 +115,12 @@ if __name__ == "__main__":
             max_n_gram = 4
 
         audio_file = request.files["audio"].read()
+
+        # Debug, get the latest file
+        if os.getenv("SERVER_DEBUG") == "1":
+            with open("most_recent.wav", "wb") as f:
+                f.write(audio_file)
+
         transcription, result, existing_words = processor.process_audio(
             audio_file, max_n_gram
         )
@@ -136,7 +142,7 @@ if __name__ == "__main__":
     def deck():
         if processor.deck_df is not None:
             return (
-                {"deck": processor.deck_df.count()},
+                {"deck": len(processor.deck_df)},
                 200,
                 {"Content-Type": "application/json"},
             )

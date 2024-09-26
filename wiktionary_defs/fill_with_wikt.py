@@ -2,6 +2,7 @@ import argparse
 import json
 import re
 import shutil
+import sys
 from typing import List
 
 import pandas as pd
@@ -162,6 +163,7 @@ def extract_and_fill(
     not_found = []
 
     # Process the deck
+    print("Looking for wikt entries...")
     with tqdm(total=len(deck)) as pbar:
         for note_dict in deck:
             pbar.set_description(f"Processing {note_dict['vi']}")
@@ -182,10 +184,6 @@ def extract_and_fill(
                 note_dict["wiktdata"] = "None"
                 not_found.append(note_dict["vi"])
 
-    out_path = deck_csv_path.split("/")[-1].replace(".", "_wikt.")
-    print("Writing the deck...")
-    write_deck(deck, metadata, out_path)
-
     if not_found:
         print(
             f"Definitions for {len(not_found)} words were not found. They were written to not_found.txt"
@@ -193,6 +191,7 @@ def extract_and_fill(
         with open("not_found.txt", "w", encoding="utf-8") as f:
             for word in not_found:
                 f.write(word + "\n")
+    return deck, metadata
 
 
 if __name__ == "__main__":
@@ -200,17 +199,18 @@ if __name__ == "__main__":
         description="Extracts and fills the Anki deck with Wiktionary data."
     )
     parser.add_argument(
-        "--wikt_extract", type=str, help="Path to the wiktextract JSONL file"
-    )
-    parser.add_argument(
         "--deck",
         type=str,
         help="Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.",
     )
+    parser.add_argument("--out", type=str, help="Path to the output CSV file")
+    parser.add_argument(
+        "--wikt_extract", type=str, help="Path to the wiktextract JSONL file"
+    )
     parser.add_argument(
         "--filters",
         type=str,
-        default="Sino-Vietnamese Reading of",
+        default="Sino-Vietnamese Reading of;(obsolete)",
         help="Semicolon (;) separated list of filters",
     )
     parser.add_argument(
@@ -220,8 +220,17 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    # Check all arguments filled
+    if not all([args.deck, args.wikt_extract, args.out]):
+        print("Error: Missing arguments. Please check the usage.")
+        sys.exit(1)
 
     # Backup the original deck first
-    shutil.copy(args.deck, args.deck + ".bak")
+    shutil.copy(args.deck, args.deck + ".wikt_bak")
 
-    extract_and_fill(args.wikt_extract, args.deck, args.filters, args.refill)
+    deck, metadata = extract_and_fill(
+        args.wikt_extract, args.deck, args.filters, args.refill
+    )
+
+    print("Writing the deck...")
+    write_deck(deck, metadata, args.out)

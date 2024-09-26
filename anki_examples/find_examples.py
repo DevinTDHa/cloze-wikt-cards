@@ -14,7 +14,6 @@ class CorpusExamples:
         corpus_folder,
         min_words=4,
         max_words=15,
-        num_processes=6,
     ):
         self.corpus = self.prepare_corpus(corpus_folder)
         print("Total Examples", sum([len(c[1]) for c in self.corpus]))
@@ -28,9 +27,6 @@ class CorpusExamples:
             & (self.corpus_df["num_words"] <= max_words)
         ]
         print("Filtered Examples", len(self.corpus_df))
-
-        self.num_processes = num_processes
-        self.split_size = len(self.corpus) // num_processes
 
     def prepare_corpus(self, corpus_folder):
         """Prepare the corpus from the given folder.

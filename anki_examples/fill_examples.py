@@ -14,10 +14,11 @@ NA_FILLER = "None"
 
 
 def save_examples(out_path):
-    if deck and metadata:
+    if deck:
         write_deck(deck, metadata, out_path)
     else:
         print("Error: No examples to save.")
+        sys.exit(1)
 
 
 def setup_signal_handler(out_path):
@@ -42,22 +43,21 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Fills a CSV with examples from a corpus."
     )
-    parser.add_argument("--corpus", type=str, help="Path to the corpus folder")
     parser.add_argument("--deck", type=str, help="Path to the input CSV deck")
     parser.add_argument("--out", type=str, help="Path to the output CSV file")
+    parser.add_argument("--corpus", type=str, help="Path to the corpus folder")
     parser.add_argument(
         "--num_examples",
         type=int,
         default=20,
         help="Number of examples to fill each line",
     )
-    parser.add_argument("--ex_sep", type=str, default="|", help="Example separator")
 
     args = parser.parse_args()
     csv_path = args.deck
     out_path = args.out
     num_examples = args.num_examples
-    ex_sep = args.ex_sep
+    ex_sep = "|"
 
     # Check all arguments filled
     if not all([csv_path, out_path, args.corpus]):
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     corpus = CorpusExamples(args.corpus)
 
     # backup the original file first
-    shutil.copy(csv_path, csv_path + ".bak")
+    shutil.copy(csv_path, csv_path + ".ex_bak")
     setup_signal_handler(out_path)
 
     # Load the deck
@@ -108,4 +108,4 @@ if __name__ == "__main__":
 
     # Save the results
     save_examples(out_path)
-    print("Done!")
+    print("Examples Done!")
