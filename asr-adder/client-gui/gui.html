@@ -53,8 +53,9 @@
 
     <!-- Record button and output text in same row -->
     <div class="row mb-3">
-      <div class="col-auto">
-        <button class="btn btn-primary" id="recordBtn">Record</button>
+      <div class="col-auto d-flex flex-column">
+        <button class="btn btn-primary mb-2" id="recordBtn">Record</button>
+        <button class="btn btn-success" id="playBackBtn" disabled>Play Back</button>
       </div>
       <div class="col">
         <input type="text" id="outputText" class="form-control" placeholder="Transcribed text" disabled>
@@ -109,6 +110,8 @@
     let mediaRecorder;
     let recordingInterval;
     let recordingTime = 0;
+    let audioURL;  // Store the audio URL here
+    let playbackAudio;
 
     function autofillPlaceholder(element) {
       if (!element.value) {
@@ -125,6 +128,11 @@
 
     // Start recording
     document.getElementById('recordBtn').addEventListener('click', function () {
+      // Disable the Play Back button, new recording
+      const playBackBtn = document.getElementById('playBackBtn');
+      playBackBtn.disabled = true;
+
+      // Record Button logic
       const recordBtn = document.getElementById('recordBtn');
 
       // If it's in recording state, stop recording
@@ -158,7 +166,24 @@
           const blob = new Blob(chunks, { type: 'audio/wav' });
           chunks = [];
           sendAudio(blob);
+
+          // Enable the Play Back button
+          const playBackBtn = document.getElementById('playBackBtn');
+          playBackBtn.disabled = false;
+
+          // Create an audio element for playback
+          audioURL = URL.createObjectURL(blob);
+          playbackAudio = new Audio(audioURL);
         };
+
+
+        // Play the recorded audio on click
+        document.getElementById('playBackBtn').addEventListener('click', function () {
+          if (playbackAudio) {
+            playbackAudio.play();
+          }
+        });
+
       });
     });
 
