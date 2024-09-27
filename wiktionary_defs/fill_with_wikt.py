@@ -11,12 +11,43 @@ from anki_utils.deck import load_deck, write_deck
 
 
 def load_wiktextract(file_path: str) -> pd.DataFrame:
-    """Loads JSONL file with wiktextract data (See: https://github.com/tatuylonen/wiktextract)"""
+    """
+    Loads a JSONL file containing wiktextract data and returns it as a pandas DataFrame.
+
+    Parameters
+    ----------
+    file_path : str
+        The path to the JSONL file to be loaded.
+
+    Returns
+    -------
+    pd.DataFrame
+        A pandas DataFrame containing the data from the JSONL file, with NaN values filled with empty strings.
+
+    See Also
+    --------
+    https://github.com/tatuylonen/wiktextract
+    """
     df: pd.DataFrame = pd.read_json(file_path, lines=True)
     return df.fillna("")
 
 
 def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
+    """
+    Retrieve entries from a DataFrame that match a given word.
+
+    Parameters
+    ----------
+    wikt_df : pd.DataFrame
+        The DataFrame containing Wiktionary entries.
+    word : str
+        The word to search for in the DataFrame.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame containing entries where the 'word' column matches the given word (case insensitive).
+    """
     return wikt_df[wikt_df["word"].str.lower() == word.lower()]
 
 
@@ -146,7 +177,7 @@ def extract_and_fill(
     deck_csv_path : str
         Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
     filters : str, optional
-        Test
+        Filters to apply to the meanings
     refill : bool, optional
         Refill the deck even if it has Wiktionary data already
     """

@@ -53,6 +53,25 @@ class CorpusExamples:
         return np.array(corpus)
 
     def find_examples(self, example: str, num_examples: int):
+        """
+        Find examples in the corpus that match the given example string.
+
+        This method searches for occurrences of the example string in the corpus DataFrame.
+        It performs a case-insensitive search by considering lower case, upper case, and title case variations of the example string.
+
+        Parameters
+        ----------
+        example : str
+            The example string to search for in the corpus.
+        num_examples : int
+            The number of examples to return.
+
+        Returns
+        -------
+        list
+            A list of dictionaries containing the found examples. Each dictionary represents a row in the DataFrame.
+            If no examples are found or if the input parameters are invalid, an empty list is returned.
+        """
         if not example or not num_examples:
             return []
 

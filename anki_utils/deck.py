@@ -2,6 +2,33 @@ import csv
 
 
 def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
+    """
+    Load a deck from a CSV file.
+
+    The CSV file is expected to have tab-separated values. The function reads the file,
+    extracts metadata comments (lines starting with '#') at the beginning of the file,
+    and then processes the remaining lines as deck entries.
+
+    Each deck entry can have either one field (vi) or four to five fields:
+    
+    - id: Identifier (optional)
+    - vi: Vietnamese text
+    - en: English translation
+    - examples: Example sentences
+    - wiktdata: Additional data (optional)
+
+    Parameters
+    ----------
+    deck_csv_path : str
+        The path to the CSV file containing the deck.
+
+    Returns
+    -------
+    tuple of list of dict and list of str
+        A tuple containing two elements:
+        - A list of dictionaries representing the deck entries.
+        - A list of metadata comment strings.
+    """
     deck: list[dict] = []
     metadata: list[str] = []
 
@@ -40,6 +67,25 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
 
 
 def write_deck(deck: list[dict], metadata: list[str], out_path: str):
+    """
+    Writes a deck of notes and metadata to a specified file in CSV format.
+
+    Parameters
+    ----------
+    deck : list of dict
+        A list of dictionaries where each dictionary represents a note.
+        Each dictionary should have the keys: "id", "vi", "en", "examples", "wiktdata".
+    metadata : list of str
+        A list of strings representing metadata lines to be written at the beginning of the file.
+    out_path : str
+        The file path where the CSV file will be written.
+
+    Writes
+    ------
+    None
+        A CSV file at the specified out_path with the provided deck and metadata.
+        The CSV file will use tab as the delimiter and will not quote any fields.
+    """
     with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
         fieldnames = ["id", "vi", "en", "examples", "wiktdata"]
         writer = csv.DictWriter(
