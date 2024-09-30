@@ -29,6 +29,10 @@ def load_wiktextract(file_path: str) -> pd.DataFrame:
     https://github.com/tatuylonen/wiktextract
     """
     df: pd.DataFrame = pd.read_json(file_path, lines=True)
+
+    # Remove control characters
+    df.replace({r"\n": " ", r"\t": " "}, regex=True, inplace=True)
+
     return df.fillna("")
 
 
@@ -116,6 +120,7 @@ def json_dump_entries(
     filter_words: List[str] = [
         "Sino-Vietnamese Reading of",
         "(obsolete)",
+        "(no longer used in isolation)",
     ],  # TODO: create a separate file
 ) -> tuple[str, str]:
     """Converts Wiktionary entries to a JSON string and a short string representation (for the back field.)
