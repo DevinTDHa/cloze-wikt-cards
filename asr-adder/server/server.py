@@ -55,19 +55,27 @@ class TranscriptionProcessor:
         # Assume the audio is in a correct format for ffmpeg to read
         # and has the correct sampling rate can handle it.
         transcription: str = self.transcriber(audio_bytes)["text"]
-        word_splits = re.sub(r"(^\W|\W$)", "", transcription).split()
+        transcription = re.sub(r"(^\W|\W$)", "", transcription.lower())
+        word_splits = transcription.split()
 
         result_dict = {}
         searched_words = []
-        for n in range(1, max_n_gram + 1):
-            for j in range(len(word_splits)):
-                word = " ".join(word_splits[j : j + n])
-                if word in result_dict:
-                    continue
 
-                result = self.get_wikt_entry(word)
-                result_dict[word] = result
-                searched_words.append(word)
+        if max_n_gram > 0:
+            for n in range(1, max_n_gram + 1):
+                for j in range(len(word_splits)):
+                    word = " ".join(word_splits[j : j + n])
+                    if word in result_dict:
+                        continue
+
+                    result = self.get_wikt_entry(word)
+                    result_dict[word] = result
+                    searched_words.append(word)
+        else:  # If max_n_gram is 0, search for the whole transcription
+            word = transcription
+            result = self.get_wikt_entry(word)
+            result_dict[word] = result
+            searched_words.append(word)
 
         result_dict = {k: v for k, v in result_dict.items() if v["json"]}
 
