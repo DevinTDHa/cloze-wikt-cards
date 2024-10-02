@@ -40,23 +40,24 @@
   <div class="container" style="max-width: 800px;">
     <h3>ASR Adder</h3>
     <p>This app will record audio when you press the button and send it to the cloze-wikt server to transcribe and
-      extract wiktionary entries. The results can then be saved to a csv for further processing.</p>
+      extract wiktionary entries. The results can then be saved to a csv for further processing. Keyboard shortcuts are
+      in brackets.</p>
 
     <!-- URL input -->
     <div class="input-group mb-3">
       <span class="input-group-text">URL</span>
       <input type="text" id="url" class="form-control" placeholder="http://localhost:5000/process_audio"
         onclick="autofillPlaceholder(this)">
-      <button class="btn btn-primary" id="testBtn">Test</button>
+      <button class="btn btn-primary" id="testBtn">(T)est</button>
       <!-- TODO: Maybe switch for max n-grams int?  -->
     </div>
 
     <!-- Record button, dropdown, and output text in the same row -->
     <div class="row mb-3">
       <div class="col-auto d-flex flex-column">
-        <button class="btn btn-primary mb-2" id="recordBtn">Record</button>
-        <button class="btn btn-success mb-2" id="playBackBtn" disabled>Play Back</button>
-        <label for="maxNGramSelect" class="form-label">Lookup N-Gram:</label>
+        <button class="btn btn-primary mb-2" id="recordBtn">(R)ecord</button>
+        <button class="btn btn-success mb-2" id="playBackBtn" disabled>(P)lay Back</button>
+        <label for="maxNGramSelect" class="form-label">Lookup (N)-Gram:</label>
         <select class="form-select" id="maxNGramSelect">
           <option value="0">None</option>
           <option value="1">1-gram</option>
@@ -94,7 +95,7 @@
     <div class="row m-3">
       <div class="col-md-6">
         <div class="input-group">
-          <button class="btn btn-primary" id="saveBtn">Save as</button>
+          <button class="btn btn-primary" id="saveBtn">(S)ave as</button>
           <input type="text" id="saveFileName" class="form-control" placeholder="results.txt"
             onclick="autofillPlaceholder(this)">
           <small class="form-text text-muted">Only the word itself is saved. Use the other scripts to fill the
@@ -103,11 +104,11 @@
       </div>
       <div class="col-md-3 text-end">
         <button class="btn btn-primary" id="clearDuplicates" onmouseover="this.style.backgroundColor='red'"
-          onmouseout="this.style.backgroundColor=''">Clear ✅</button>
+          onmouseout="this.style.backgroundColor=''">Clear (D)uplicates ✅</button>
       </div>
       <div class="col-md-3 text-end">
         <button class="btn btn-primary" id="clearBtn" onmouseover="this.style.backgroundColor='red'"
-          onmouseout="this.style.backgroundColor=''">Clear Entries</button>
+          onmouseout="this.style.backgroundColor=''">(C)lear Entries</button>
       </div>
     </div>
   </div>
@@ -158,12 +159,12 @@
         mediaRecorder.start();
         recordingTime = 0;
         recordBtn.classList.add('recording');
-        recordBtn.textContent = `Stop 00:00`;
+        recordBtn.textContent = `Stop (R) 00:00`;
 
         // Update the recording time every second
         recordingInterval = setInterval(() => {
           recordingTime++;
-          recordBtn.textContent = `Stop ${formatTime(recordingTime)}`;
+          recordBtn.textContent = `Stop (R) ${formatTime(recordingTime)}`;
         }, 1000);
 
         mediaRecorder.ondataavailable = function (e) {
@@ -257,7 +258,7 @@
           const recordBtn = document.getElementById('recordBtn');
           recordBtn.disabled = false;
           recordBtn.classList.remove('recording');
-          recordBtn.textContent = 'Record';
+          recordBtn.textContent = '(R)ecord';
         })
         .catch(error => {
           console.error('Error:', error);
@@ -331,27 +332,40 @@
         });
     });
 
-    // Add keybindings
-    // document.addEventListener('keydown', function (event) {
-    //   const recordBtn = document.getElementById('recordBtn');
-    //   const playBackBtn = document.getElementById('playBackBtn');
-    //   const resultsTable = document.getElementById('resultsTable');
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'r') {
+        document.getElementById('recordBtn').click();
+      }
 
-    //   if (event.key === 'r' || event.key === 'R') {
-    //     if (recordBtn.disabled) {
-    //       // Stop recording
-    //       recordBtn.click();
-    //     } else {
-    //       // Start recording
-    //       recordBtn.click();
-    //     }
-    //   } else if (event.key === 'c' || event.key === 'C') {
-    //     // Clear all rows in the results table
-    //     while (resultsTable.rows.length > 1) {
-    //       resultsTable.deleteRow(1);
-    //     }
-    //   }
-    // });
+      if (event.key === 'd') {
+        document.getElementById('clearDuplicates').click();
+      }
+
+      if (event.key === 'c') {
+        document.getElementById('clearBtn').click();
+      }
+
+      if (event.key === 'p') {
+        document.getElementById('playBackBtn').click();
+      }
+
+      if (event.key === 's') {
+        document.getElementById('saveBtn').click();
+      }
+
+      if (event.key === 't') {
+        document.getElementById('testBtn').click();
+      }
+
+      // n cycles through ngram options
+      if (event.key === 'n') {
+        const maxNGramSelect = document.getElementById('maxNGramSelect');
+        const maxNGram = parseInt(maxNGramSelect.value);
+        const nextNGram = (maxNGram + 1) % 5;
+        maxNGramSelect.value = nextNGram;
+      }
+    });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
