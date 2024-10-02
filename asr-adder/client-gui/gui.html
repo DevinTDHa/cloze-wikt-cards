@@ -91,6 +91,27 @@
       </div>
     </div>
 
+    <!-- Manual Add Row -->
+    <div class="row mb-3">
+      <div class="col">
+        <input type="text" id="manualWord" class="form-control" placeholder="Enter word">
+      </div>
+      <div class="col-auto">
+        <button class="btn btn-primary" id="addBtn">Add</button>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('addBtn').addEventListener('click', function () {
+        const word = document.getElementById('manualWord').value.trim();
+
+        if (word) {
+          addWordToTable(word, { short: "" }, []);
+          document.getElementById('manualWord').value = '';
+        }
+      });
+    </script>
+
     <!-- Clear and Save As Buttons -->
     <div class="row m-3">
       <div class="col-md-6">
@@ -196,6 +217,43 @@
       });
     });
 
+    function addWordToTable(word, definition, existsInDeck) {
+      const existingWords = Array.from(document.querySelectorAll('#resultsTable td:first-child')).map(td => td.textContent);
+      if (!existingWords.includes(word)) {
+        let row = document.createElement('tr');
+
+        const wordCell = document.createElement('td');
+        wordCell.textContent = word;
+
+        // Highlight duplicates
+        if (existsInDeck.includes(word)) {
+          row.classList.add('duplicateEntry');
+          wordCell.textContent = word + ' ✅';
+        }
+
+        row.appendChild(wordCell);
+
+        const definitionCell = document.createElement('td');
+        if (definition.short.length > 300) {
+          definitionCell.textContent = definition.short.substring(0, 300) + '...';
+        } else {
+          definitionCell.textContent = definition.short;
+        }
+        row.appendChild(definitionCell);
+
+        const actionCell = document.createElement('td');
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+        deleteBtn.innerHTML = '⌫';
+        deleteBtn.addEventListener('click', () => row.remove());
+        actionCell.appendChild(deleteBtn);
+        row.appendChild(actionCell);
+
+        resultsTable.appendChild(row);
+      }
+    }
+
+
     // Send recorded audio to the server
     function sendAudio(audioBlob) {
       const url = document.getElementById('url').value || document.getElementById('url').placeholder;
@@ -219,40 +277,9 @@
           const existsInDeck = data.existing_words;
 
           Object.entries(data.result).forEach(([word, definition]) => {
-            const existingWords = Array.from(document.querySelectorAll('#resultsTable td:first-child')).map(td => td.textContent);
-            if (!existingWords.includes(word)) {
-              let row = document.createElement('tr');
-
-              const wordCell = document.createElement('td');
-              wordCell.textContent = word;
-
-              // Highlight duplicates
-              if (existsInDeck.includes(word)) {
-                row.classList.add('duplicateEntry');
-                wordCell.textContent = word + ' ✅';
-              }
-
-              row.appendChild(wordCell);
-
-              const definitionCell = document.createElement('td');
-              if (definition.short.length > 300) {
-                definitionCell.textContent = definition.short.substring(0, 300) + '...';
-              } else {
-                definitionCell.textContent = definition.short;
-              }
-              row.appendChild(definitionCell);
-
-              const actionCell = document.createElement('td');
-              const deleteBtn = document.createElement('button');
-              deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
-              deleteBtn.innerHTML = '⌫';
-              deleteBtn.addEventListener('click', () => row.remove());
-              actionCell.appendChild(deleteBtn);
-              row.appendChild(actionCell);
-
-              resultsTable.appendChild(row);
-            }
+            addWordToTable(word, definition, existsInDeck);
           });
+
 
           // Reset button after response
           const recordBtn = document.getElementById('recordBtn');
@@ -334,36 +361,41 @@
 
     // Add keyboard shortcuts
     document.addEventListener('keydown', function (event) {
-      if (event.key === 'r') {
-        document.getElementById('recordBtn').click();
-      }
+      const activeElement = document.activeElement;
+      const isTyping = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
 
-      if (event.key === 'd') {
-        document.getElementById('clearDuplicates').click();
-      }
+      if (!isTyping && event.shiftKey) {
+        if (event.key === 'R') {
+          document.getElementById('recordBtn').click();
+        }
 
-      if (event.key === 'c') {
-        document.getElementById('clearBtn').click();
-      }
+        if (event.key === 'D') {
+          document.getElementById('clearDuplicates').click();
+        }
 
-      if (event.key === 'p') {
-        document.getElementById('playBackBtn').click();
-      }
+        if (event.key === 'C') {
+          document.getElementById('clearBtn').click();
+        }
 
-      if (event.key === 's') {
-        document.getElementById('saveBtn').click();
-      }
+        if (event.key === 'P') {
+          document.getElementById('playBackBtn').click();
+        }
 
-      if (event.key === 't') {
-        document.getElementById('testBtn').click();
-      }
+        if (event.key === 'S') {
+          document.getElementById('saveBtn').click();
+        }
 
-      // n cycles through ngram options
-      if (event.key === 'n') {
-        const maxNGramSelect = document.getElementById('maxNGramSelect');
-        const maxNGram = parseInt(maxNGramSelect.value);
-        const nextNGram = (maxNGram + 1) % 5;
-        maxNGramSelect.value = nextNGram;
+        if (event.key === 'T') {
+          document.getElementById('testBtn').click();
+        }
+
+        // n cycles through ngram options
+        if (event.key === 'N') {
+          const maxNGramSelect = document.getElementById('maxNGramSelect');
+          const maxNGram = parseInt(maxNGramSelect.value);
+          const nextNGram = (maxNGram + 1) % 5;
+          maxNGramSelect.value = nextNGram;
+        }
       }
     });
   </script>
