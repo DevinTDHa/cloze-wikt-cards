@@ -10,7 +10,7 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
     and then processes the remaining lines as deck entries.
 
     Each deck entry can have either one field (vi) or four to five fields:
-    
+
     - id: Identifier (optional)
     - vi: Vietnamese text
     - en: English translation
@@ -38,13 +38,16 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
             if line.startswith("#"):
                 metadata.append(line)
             else:
+                csv_file.seek(sum([len(x) for x in metadata]))
                 break
 
         reader = csv.reader(csv_file, delimiter="\t")
         for row in reader:
+            if len(row) == 0:
+                continue
             assert (
                 len(row) == 1 or len(row) >= 4
-            ), "The deck should have one (vi), four or five fields: id, vi, en, examples, [wiktdata]. (Make sure you export with id)"
+            ), "The deck should have one (vi), four or five fields: id, vi, en, examples, [wiktdata], [tag]. (Make sure you export with id)"
             if len(row) == 1:
                 row_dict = {
                     "id": "",
@@ -61,6 +64,9 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
                 }
             if len(row) == 5:
                 row_dict["wiktdata"] = row[4]
+            if len(row) == 6:
+                row_dict["tag"] = row[5]
+
             deck.append(row_dict)
 
     return deck, metadata
@@ -93,8 +99,7 @@ def write_deck(deck: list[dict], metadata: list[str], out_path: str):
             fieldnames=fieldnames,
             delimiter="\t",
             quoting=csv.QUOTE_NONE,
-            quotechar=None,
-            escapechar=None,
+            escapechar="\\",
         )
 
         for metadata_line in metadata:
