@@ -41,7 +41,9 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
                 csv_file.seek(sum([len(x) for x in metadata]))
                 break
 
-        reader = csv.reader(csv_file, delimiter="\t")
+        reader = csv.reader(
+            csv_file, delimiter="\t", quoting=csv.QUOTE_NONE, escapechar="\\"
+        )
         for row in reader:
             if len(row) == 0:
                 continue
@@ -106,6 +108,9 @@ def write_deck(deck: list[dict], metadata: list[str], out_path: str):
             csv_file.write(metadata_line)
 
         for note_dict in deck:
+            # if "wiktdata" in note_dict and note_dict["wiktdata"]:
+            #     # Escape backslashes in wiktdata
+            #     note_dict["wiktdata"] = note_dict["wiktdata"].replace("\\\\", "")
             writer.writerow(note_dict)
 
     print(f"Writing deck to {out_path}")
