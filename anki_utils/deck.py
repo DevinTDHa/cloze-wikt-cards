@@ -50,24 +50,16 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
             assert (
                 len(row) == 1 or len(row) >= 4
             ), "The deck should have one (vi), four or five fields: id, vi, en, examples, [wiktdata], [tag]. (Make sure you export with id)"
-            if len(row) == 1:
-                row_dict = {
-                    "id": "",
-                    "vi": row[0],
-                    "en": "",
-                    "examples": "",
-                }
-            else:
-                row_dict = {
-                    "id": row[0],
-                    "vi": row[1],
-                    "en": row[2],
-                    "examples": row[3],
-                }
-            if len(row) == 5:
-                row_dict["wiktdata"] = row[4]
-            if len(row) == 6:
-                row_dict["tag"] = row[5]
+            row_dict = {
+                "id": row[0] if len(row) > 1 else "",  # Assume we have id
+                "vi": (
+                    row[0] if len(row) == 1 else row[1]
+                ),  # The file only contains a single word per line
+                "en": row[2] if len(row) > 2 else "",
+                "examples": row[3] if len(row) > 3 else "",
+                "wiktdata": row[4] if len(row) > 4 else "",
+                "tag": row[5] if len(row) > 5 else "",
+            }
 
             deck.append(row_dict)
 
@@ -95,7 +87,7 @@ def write_deck(deck: list[dict], metadata: list[str], out_path: str):
         The CSV file will use tab as the delimiter and will not quote any fields.
     """
     with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
-        fieldnames = ["id", "vi", "en", "examples", "wiktdata"]
+        fieldnames = ["id", "vi", "en", "examples", "wiktdata", "tag"]
         writer = csv.DictWriter(
             csv_file,
             fieldnames=fieldnames,
