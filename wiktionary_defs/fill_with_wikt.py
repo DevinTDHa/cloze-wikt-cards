@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import re
 import shutil
 import sys
@@ -52,7 +53,48 @@ def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
     pd.DataFrame
         A DataFrame containing entries where the 'word' column matches the given word (case insensitive).
     """
-    return wikt_df[wikt_df["word"].str.lower() == word.lower()]
+
+    def handle_alternative_spelling(results: pd.DataFrame) -> pd.DataFrame:
+        # If for all sense in the results, we match "Alternative spelling of", we need to check again with the alternative spelling
+        alternative_spelling_regex = re.compile(r"Alternative spelling of (.+)")
+
+        def all_senses_alternative_spelling(results):
+            return all(
+                "Alternative spelling of" in gloss
+                for row in results.itertuples()
+                for sense in row.senses
+                for gloss in sense["glosses"]
+            )
+
+        if all_senses_alternative_spelling(results):
+            first_gloss = results.iloc[0]["senses"][0]["glosses"][0]
+            match = alternative_spelling_regex.search(first_gloss)
+            if match:
+                alternative_spelling: str = match.group(1)
+
+                # Case: Explanation in Brackets
+                # Ex: Alternative spelling of tổng thư kí (“Secretary General”)
+                bracket_i = alternative_spelling.find(" (")
+                if bracket_i != -1:
+                    alternative_spelling = alternative_spelling[
+                        : alternative_spelling.find(" (")
+                    ]
+                # Case: Only provided alternative spelling
+                if alternative_spelling.endswith("."):
+                    alternative_spelling = alternative_spelling[:-1]
+
+                results = wikt_df[
+                    wikt_df["word"].str.lower() == alternative_spelling.lower()
+                ]
+            else:
+                print(f"WARN: Tried but not find alternative spelling in {first_gloss}")
+
+        return results
+
+    results = wikt_df[wikt_df["word"].str.lower() == word.lower()]
+    if not results.empty:
+        results = handle_alternative_spelling(results)
+    return results
 
 
 def process_senses(
@@ -238,10 +280,16 @@ if __name__ == "__main__":
         "--deck",
         type=str,
         help="Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.",
+        required=True,
     )
-    parser.add_argument("--out", type=str, help="Path to the output CSV file")
     parser.add_argument(
-        "--wikt_extract", type=str, help="Path to the wiktextract JSONL file"
+        "--out", type=str, help="Path to the output CSV file", required=True
+    )
+    parser.add_argument(
+        "--wikt_extract",
+        type=str,
+        help="Path to the wiktextract JSONL file",
+        required=True,
     )
     parser.add_argument(
         "--filters",
@@ -257,9 +305,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     # Check all arguments filled
-    if not all([args.deck, args.wikt_extract, args.out]):
-        print("Error: Missing arguments. Please check the usage.")
-        sys.exit(1)
+    for path in [args.deck, args.wikt_extract]:
+        assert os.path.exists(path), f"Path {path} does not exist."
 
     # Backup the original deck first
     shutil.copy(args.deck, args.deck + ".wikt_bak")
