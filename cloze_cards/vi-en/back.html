@@ -50,7 +50,7 @@
   function chooseRandomExample() {
     const examplesDom = document.getElementById("examples");
     var text = examplesDom.innerHTML;
-    const examples = text.split("|");
+    var examples = text.replace(/\\/g, "").split("|");
     const randomIndex = sessionStorage.getItem("viex_curIdx");
 
     const exDetails = createDetails(
@@ -142,3 +142,4 @@
   chooseRandomExample();
   fillWiktData(decodeHtmlEntities(`{{WiktData}}`));
 </script>
+

@@ -2,7 +2,7 @@
 
 <br /><br />
 
-<div class="examplesDiv">Ví dụ: <br/><span id="examples">{{Examples}}</span></div>
+<div class="examplesDiv">Ví dụ: <br /><span id="examples">{{Examples}}</span></div>
 <br />
 
 {{type:Front}}
@@ -14,7 +14,7 @@
     var text = example.innerHTML;
 
     // Choose a random example, which are separated by "|" in the example
-    var examples = text.split("|");
+    const examples = text.replace(/\\/g, "").split("|");
     var randomIndex = Math.floor(Math.random() * examples.length);
     sessionStorage.setItem("viex_curIdx", randomIndex);
     text = examples[randomIndex];
