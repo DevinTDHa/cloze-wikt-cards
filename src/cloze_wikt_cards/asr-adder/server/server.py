@@ -21,6 +21,7 @@ class TranscriptionProcessor:
         wikt_path: str,
         model_name: str = "vinai/PhoWhisper-medium",
         deck_path: Optional[str] = None,
+        device: str = "cuda" if torch.cuda.is_available() else "cpu",
     ):
         print("Loading Wiktionary data...")
         self.wikt_df = load_wiktextract(wikt_path)
@@ -29,7 +30,7 @@ class TranscriptionProcessor:
         self.transcriber = pipeline(
             "automatic-speech-recognition",
             model=model_name,
-            device="cuda" if torch.cuda.is_available() else "cpu",
+            device=device,
         )
         # self.sampling_rate = self.transcriber.feature_extractor.sampling_rate
         self.deck_df: pd.DataFrame | None = None
@@ -98,6 +99,13 @@ if __name__ == "__main__":
         "--model_name", type=str, required=True, help="Name of the ASR model"
     )
     parser.add_argument("--deck", type=str, required=False, help="Name of the deck")
+    parser.add_argument(
+        "--device",
+        type=str,
+        required=False,
+        help="Device for the model",
+        default="cuda",
+    )
 
     # Step 4: Parse the arguments
     args = parser.parse_args()
@@ -141,6 +149,7 @@ if __name__ == "__main__":
 
     @app.route("/")
     def serve_gui():
+        print(f"Getting GUI from {os.path.join(os.getcwd(), "client-gui")}")
         return send_from_directory(
             os.path.join(os.getcwd(), "client-gui"),
             "gui.html",
