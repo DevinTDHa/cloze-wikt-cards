@@ -6,12 +6,12 @@ from typing import Optional
 import torch
 from flask import Flask, request, send_from_directory
 from transformers import pipeline
-from wiktionary_defs.fill_with_wikt import (
+from cloze_wikt_cards.wiktionary_defs.fill_with_wikt import (
     get_entries,
     json_dump_entries,
     load_wiktextract,
 )
-from anki_utils.deck import load_deck
+from cloze_wikt_cards.anki_utils.deck import load_deck
 import pandas as pd
 
 
