@@ -18,12 +18,31 @@ import pandas as pd
 class TranscriptionProcessor:
     def __init__(
         self,
-        wikt_path: str,
+        wikt_paths: list[str],
         model_name: str = "vinai/PhoWhisper-medium",
         deck_path: Optional[str] = None,
     ):
-        print("Loading Wiktionary data...")
-        self.wikt_df = load_wiktextract(wikt_path)
+        print(f"Loading Wiktionary file {os.path.basename(wikt_paths[0])}...")
+        self.wikt_df = load_wiktextract(wikt_paths[0])
+        print(f"Loaded {len(self.wikt_df)} entries.")
+        for path in wikt_paths[1:]:
+            print(
+                f"Loading additional Wiktionary data from {os.path.basename(path)}..."
+            )
+            additional_df = load_wiktextract(path)
+            new_wikt_entries = additional_df[
+                ~additional_df["word"].isin(self.wikt_df["word"])
+            ]
+            print(f"Updating with {len(new_wikt_entries)} additional entries...")
+            self.wikt_df = pd.concat(
+                [
+                    self.wikt_df,
+                    new_wikt_entries,
+                ],
+                ignore_index=True,
+            )
+        
+        print(f"Loaded {len(self.wikt_df)} total entries.")
 
         print(f"Loading the transcriber model {model_name}...")
         self.transcriber = pipeline(
@@ -92,7 +111,11 @@ if __name__ == "__main__":
 
     # Step 3: Add arguments for wikt_path, model_name, and deck
     parser.add_argument(
-        "--wikt_path", type=str, required=True, help="Path to the Wiktionary JSONL file"
+        "--wikt_path",
+        type=str,
+        help="Path to the Wiktionary JSONL file",
+        nargs="+",
+        action="extend",
     )
     parser.add_argument(
         "--model_name", type=str, required=True, help="Name of the ASR model"
@@ -103,13 +126,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Check if all files exist
-    if not os.path.exists(args.wikt_path):
-        raise FileNotFoundError(f"File not found: {args.wikt_path}")
+    for path in args.wikt_path:
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"File not found: {path}")
 
     # Step 5: Use the parsed arguments to initialize the TranscriptionProcessor
     app = Flask(__name__)
     processor = TranscriptionProcessor(
-        wikt_path=args.wikt_path, model_name=args.model_name, deck_path=args.deck
+        wikt_paths=args.wikt_path, model_name=args.model_name, deck_path=args.deck
     )
 
     @app.route("/process_audio", methods=["POST"])
