@@ -2,21 +2,49 @@
 
 <br /><br />
 
-<div class="examples">
-  Ví dụ: <br /><span id="examples">{{Examples}}</span>
+<div class="examplesDiv">
+  <b>Ví dụ</b> <br /><span id="examples">{{Examples}}</span>
 </div>
 
 <br />
 
 <script>
-  var example = document.getElementById("example");
-  var text = example.innerHTML;
+  function createDetails(summary, contentElement) {
+    const details = document.createElement("details");
+    const summaryElement = document.createElement("summary");
+    summaryElement.innerHTML = summary;
+    details.appendChild(summaryElement);
 
-  // Choose a random example, which are separated by "|" in the example
-  var examples = text.replace(/\\/g, "").split("|");
-  var randomIndex = Math.floor(Math.random() * examples.length);
-  sessionStorage.setItem("viex_curIdx", randomIndex);
+    if (!contentElement) {
+      return details;
+    }
 
-  text = examples[randomIndex];
-  example.innerHTML = text;
+    if (typeof contentElement === "string") {
+      const content = document.createElement("p");
+      content.innerHTML = contentElement;
+      details.appendChild(content);
+    } else {
+      details.appendChild(contentElement);
+    }
+
+    return details;
+  }
+
+  function chooseAndSetRandomExample() {
+    const examplesDom = document.getElementById("examples");
+    var text = examplesDom.innerHTML;
+    var examples = text.replace(/\\/g, "").split("|");
+    
+    const randomIndex = Math.floor(Math.random() * examples.length);
+    sessionStorage.setItem("viex_curIdx", randomIndex);
+
+    const exDetails = createDetails(
+      examples[randomIndex],
+      examples.join("<br>")
+    );
+    text = exDetails.outerHTML;
+    examplesDom.innerHTML = text;
+  }
+
+  chooseAndSetRandomExample();
 </script>
