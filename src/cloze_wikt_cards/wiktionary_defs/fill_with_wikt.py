@@ -3,12 +3,11 @@ import json
 import os
 import re
 import shutil
-import sys
 from typing import List
 
 import pandas as pd
 from tqdm import tqdm
-from anki_utils.deck import load_deck, write_deck
+from cloze_wikt_cards.anki_utils.deck import load_deck, write_deck
 
 
 def load_wiktextract(file_path: str) -> pd.DataFrame:
