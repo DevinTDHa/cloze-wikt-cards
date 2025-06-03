@@ -42,7 +42,7 @@ class TranscriptionProcessor:
                 ],
                 ignore_index=True,
             )
-        
+
         print(f"Loaded {len(self.wikt_df)} total entries.")
 
         print(f"Loading the transcriber model {model_name}...")
@@ -107,7 +107,7 @@ class TranscriptionProcessor:
         return transcription, result_dict, existing_words.to_list()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="ASR Adder Server")
 
     # Step 3: Add arguments for wikt_path, model_name, and deck
@@ -173,9 +173,12 @@ if __name__ == "__main__":
 
     @app.route("/")
     def serve_gui():
-        print(f"Getting GUI from {os.path.join(os.getcwd(), "client-gui")}")
+        # Get the directory where server.py is located
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        gui_path = os.path.join(script_dir, "..", "client-gui")
+        print(f"Getting GUI from {gui_path}")
         return send_from_directory(
-            os.path.join(os.getcwd(), "client-gui"),
+            gui_path,
             "gui.html",
         )
 
@@ -191,3 +194,7 @@ if __name__ == "__main__":
             return {"deck": 0}, 200, {"Content-Type": "application/json"}
 
     app.run(debug=False)
+
+
+if __name__ == "__main__":
+    main()

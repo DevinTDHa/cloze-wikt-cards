@@ -10,7 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
     "flask==3.1.0",
     "pandas==2.2.3",
-    "transformers[torch]==4.52.3",
+    "transformers[torch]==4.50.0",
     "cudf-cu12==25.4.*",
 ]
 
@@ -22,3 +22,7 @@ url = "https://pypi.nvidia.com"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+
+[project.scripts]
+server = "asr_adder.server:main"
