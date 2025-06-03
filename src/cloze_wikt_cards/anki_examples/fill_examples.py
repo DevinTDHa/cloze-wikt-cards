@@ -1,5 +1,5 @@
-from anki_utils.deck import load_deck, write_deck
-from find_examples import CorpusExamples
+from cloze_wikt_cards.anki_utils.deck import load_deck, write_deck
+from cloze_wikt_cards.anki_examples.find_examples import CorpusExamples
 from tqdm import tqdm
 import signal
 import sys
@@ -39,7 +39,7 @@ def setup_signal_handler(out_path):
     signal.signal(signal.SIGINT, signal_handler)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Fills a CSV with examples from a corpus."
     )
@@ -109,3 +109,7 @@ if __name__ == "__main__":
     # Save the results
     save_examples(out_path)
     print("Examples Done!")
+
+
+if __name__ == "__main__":
+    main()

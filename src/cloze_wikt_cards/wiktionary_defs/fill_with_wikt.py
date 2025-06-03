@@ -271,7 +271,7 @@ def extract_and_fill(
     return deck, metadata
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Extracts and fills the Anki deck with Wiktionary data."
     )
@@ -316,3 +316,7 @@ if __name__ == "__main__":
 
     print("Writing the deck...")
     write_deck(deck, metadata, args.out)
+
+
+if __name__ == "__main__":
+    main()

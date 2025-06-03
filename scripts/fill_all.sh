@@ -47,9 +47,9 @@ echo "Wiktionary Extract: $WIKT_EXTRACT"
 echo "Corpus: $CORPUS"
 
 echo "FILLING WITH WIKTIONARY DEFINITIONS..."
-python3 wiktionary_defs/fill_with_wikt.py --deck $DECK --out $OUT --wikt_extract $WIKT_EXTRACT $REFILL
+uv run fill_with_wikt --deck $DECK --out $OUT --wikt_extract $WIKT_EXTRACT $REFILL
 
 echo "FILLING WITH EXAMPLE SENTENCES..."
-python3 anki_examples/fill_examples.py --deck $OUT --out $OUT --corpus $CORPUS
+uv run fill_examples --deck $OUT --out $OUT --corpus $CORPUS
 
 echo "All Done!"

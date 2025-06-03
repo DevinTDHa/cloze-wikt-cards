@@ -25,4 +25,6 @@ build-backend = "hatchling.build"
 
 
 [project.scripts]
-server = "asr_adder.server:main"
+server = "asr_adder.server.server:main"
+fill_with_wikt = "cloze_wikt_cards.wiktionary_defs.fill_with_wikt:main"
+fill_examples = "cloze_wikt_cards.anki_examples.fill_examples:main"
