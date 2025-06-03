@@ -243,7 +243,7 @@ def extract_and_fill(
     print("Looking for wikt entries...")
     with tqdm(total=len(deck)) as pbar:
         for note_dict in deck:
-            pbar.set_description(f"Processing {note_dict['vi']}")
+            pbar.set_description(f"Processing {note_dict['vi']:16}...")
             pbar.update(1)
 
             # Skip the word if it already has Wiktionary data and we are not refilling

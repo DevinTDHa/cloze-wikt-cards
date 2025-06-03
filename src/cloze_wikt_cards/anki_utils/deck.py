@@ -47,15 +47,17 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
         for row in reader:
             if len(row) == 0:
                 continue
-            assert (
-                len(row) == 1 or len(row) >= 4
-            ), "The deck should have one (vi), four or five fields: id, vi, en, examples, [wiktdata], [tag]. (Make sure you export with id)"
+            assert len(row) == 1 or len(row) == 2 or len(row) >= 4, (
+                "The deck should have one (vi), two (vi,en) or"
+                " 4+ fields (id,vi,en,examples,[wiktdata],[tag])."
+                " Make sure you export with id when using anki."
+            )
             row_dict = {
-                "id": row[0] if len(row) > 1 else "",  # Assume we have id
+                "id": row[0] if len(row) > 2 else "",  # Only set id for 4+ field rows
                 "vi": (
-                    row[0] if len(row) == 1 else row[1]
-                ),  # The file only contains a single word per line
-                "en": row[2] if len(row) > 2 else "",
+                    row[0] if len(row) == 1 else row[0] if len(row) == 2 else row[1]
+                ),  # vi is first field for 1-2 field rows, second for 4+ field rows
+                "en": row[1] if len(row) == 2 else row[2] if len(row) > 2 else "",
                 "examples": row[3] if len(row) > 3 else "",
                 "wiktdata": row[4] if len(row) > 4 else "",
                 "tag": row[5] if len(row) > 5 else "",
