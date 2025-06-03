@@ -41,10 +41,10 @@ def setup_signal_handler(out_path):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fills a CSV with examples from a corpus."
+        description="Fills a TSV with examples from a corpus."
     )
-    parser.add_argument("--deck", type=str, help="Path to the input CSV deck")
-    parser.add_argument("--out", type=str, help="Path to the output CSV file")
+    parser.add_argument("--deck", type=str, help="Path to the input TSV deck")
+    parser.add_argument("--out", type=str, help="Path to the output TSV file")
     parser.add_argument("--corpus", type=str, help="Path to the corpus folder")
     parser.add_argument(
         "--num_examples",

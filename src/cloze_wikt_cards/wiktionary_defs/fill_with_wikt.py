@@ -221,7 +221,7 @@ def extract_and_fill(
     wikt_extract : str
         Path to the wiktextract JSONL file
     deck_csv_path : str
-        Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
+        Path to the Anki deck TSV file, which uses tab as a separator by default. The deck should be exported with identifiers.
     filters : str, optional
         Filters to apply to the meanings
     refill : bool, optional
@@ -278,11 +278,11 @@ def main():
     parser.add_argument(
         "--deck",
         type=str,
-        help="Path to the Anki deck CSV file, which uses tab as a separator by default. The deck should be exported with identifiers.",
+        help="Path to the Anki deck TSV file, which uses tab as a separator by default. The deck should be exported with identifiers.",
         required=True,
     )
     parser.add_argument(
-        "--out", type=str, help="Path to the output CSV file", required=True
+        "--out", type=str, help="Path to the output TSV file", required=True
     )
     parser.add_argument(
         "--wikt_extract",

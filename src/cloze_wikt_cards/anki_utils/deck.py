@@ -3,9 +3,9 @@ import csv
 
 def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
     """
-    Load a deck from a CSV file.
+    Load a deck from a TSV file.
 
-    The CSV file is expected to have tab-separated values. The function reads the file,
+    The TSV file is expected to have tab-separated values. The function reads the file,
     extracts metadata comments (lines starting with '#') at the beginning of the file,
     and then processes the remaining lines as deck entries.
 
@@ -20,7 +20,7 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
     Parameters
     ----------
     deck_csv_path : str
-        The path to the CSV file containing the deck.
+        The path to the TSV file containing the deck.
 
     Returns
     -------
@@ -68,7 +68,7 @@ def load_deck(deck_csv_path: str) -> tuple[list[dict], list[str]]:
 
 def write_deck(deck: list[dict], metadata: list[str], out_path: str):
     """
-    Writes a deck of notes and metadata to a specified file in CSV format.
+    Writes a deck of notes and metadata to a specified file in TSV format.
 
     Parameters
     ----------
@@ -78,13 +78,13 @@ def write_deck(deck: list[dict], metadata: list[str], out_path: str):
     metadata : list of str
         A list of strings representing metadata lines to be written at the beginning of the file.
     out_path : str
-        The file path where the CSV file will be written.
+        The file path where the TSV file will be written.
 
     Writes
     ------
     None
-        A CSV file at the specified out_path with the provided deck and metadata.
-        The CSV file will use tab as the delimiter and will not quote any fields.
+        A TSV file at the specified out_path with the provided deck and metadata.
+        The TSV file will use tab as the delimiter and will not quote any fields.
     """
     with open(out_path, "w", newline="", encoding="utf-8") as csv_file:
         fieldnames = ["id", "vi", "en", "examples", "wiktdata", "tag"]

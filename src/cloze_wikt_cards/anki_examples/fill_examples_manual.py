@@ -107,7 +107,7 @@ def save_examples(csv_path, rows):
     with open(result_path, mode="w", encoding="utf-8", newline="") as file:
         csv_writer = csv.writer(file, delimiter=";")
         csv_writer.writerows(rows)
-    print(f"\nCSV file updated with examples. Saved as '{result_path}'.")
+    print(f"\nTSV file updated with examples. Saved as '{result_path}'.")
 
 
 if __name__ == "__main__":
