@@ -8,12 +8,10 @@ import shutil
 import argparse
 
 
-deck = []
-metadata = []
 NA_FILLER = "None"
 
 
-def save_examples(out_path):
+def save_examples(out_path, deck: list[dict], metadata: list[str]):
     if deck:
         write_deck(deck, metadata, out_path)
     else:
@@ -21,11 +19,11 @@ def save_examples(out_path):
         sys.exit(1)
 
 
-def setup_signal_handler(out_path):
+def setup_signal_handler(out_path, deck: list[dict], metadata: list[str]):
     def signal_handler(signal, frame):
         print("\n\nInterrupted. Saving progress...")
         try:
-            save_examples(out_path)
+            save_examples(out_path, deck, metadata)
             sys.exit(0)
         except Exception as e:
             print(
@@ -68,18 +66,19 @@ def main():
 
     # backup the original file first
     shutil.copy(csv_path, csv_path + ".ex_bak")
-    setup_signal_handler(out_path)
 
     # Load the deck
     deck, metadata = load_deck(csv_path)
+    setup_signal_handler(out_path, deck, metadata)
 
+    running_examples_found = 0
     try:
         with tqdm(total=len(deck)) as pbar:
             for card in deck:
                 if card["examples"] == NA_FILLER:
                     pbar.update(1)
                     continue
-                pbar.set_postfix(current=card["vi"])
+                pbar.set_postfix(current=card["vi"], total=running_examples_found)
 
                 exs = card["examples"].strip()
                 existing_examples = list(set(exs.split(ex_sep))) if exs else []
@@ -100,14 +99,15 @@ def main():
                 card["examples"] = ex_sep.join(
                     existing_examples + [e["text"] for e in found_exs]
                 )
+                running_examples_found += len(found_exs)
 
     except Exception as e:
         print("Error:", e)
-        save_examples(out_path)
+        save_examples(out_path, deck, metadata)
         sys.exit(1)
 
     # Save the results
-    save_examples(out_path)
+    save_examples(out_path, deck, metadata)
     print("Examples Done!")
 
 
