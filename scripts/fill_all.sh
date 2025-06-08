@@ -50,6 +50,6 @@ echo "FILLING WITH WIKTIONARY DEFINITIONS..."
 uv run fill_with_wikt --deck $DECK --out $OUT --wikt_extract $WIKT_EXTRACT $REFILL
 
 echo "FILLING WITH EXAMPLE SENTENCES..."
-# uv run fill_examples --deck $OUT --out $OUT --corpus $CORPUS
+uv run fill_examples --deck $OUT --out $OUT --corpus $CORPUS
 
 echo "All Done!"

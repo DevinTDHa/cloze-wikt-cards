@@ -58,12 +58,15 @@ def get_entries(wikt_df: pd.DataFrame, word: str) -> pd.DataFrame:
         alternative_spelling_regex = re.compile(r"Alternative spelling of (.+)")
 
         def all_senses_alternative_spelling(results):
-            return all(
-                "Alternative spelling of" in gloss
-                for row in results.itertuples()
-                for sense in row.senses
-                for gloss in sense["glosses"]
-            )
+            try:
+                return all(
+                    "Alternative spelling of" in gloss
+                    for row in results.itertuples()
+                    for sense in row.senses
+                    for gloss in sense["glosses"]
+                )
+            except KeyError:
+                return False
 
         if all_senses_alternative_spelling(results):
             first_gloss = results.iloc[0]["senses"][0]["glosses"][0]
